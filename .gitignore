@@ -1,0 +1,79 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp
+.pnp.js
+coverage/
+build/
+
+# Environment - NEVER commit these files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+*.env
+!.env.example
+
+# Secrets - NEVER commit these files
+secrets.yaml
+secrets.yml
+*.secret
+*.key
+*.pem
+*.crt
+terraform.tfvars
+terraform.tfvars.json
+*.tfvars
+!*.tfvars.example
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Pre-commit
+# .secrets.baseline should be committed
+
+# Backups
+*.bak
+*.backup
+*.old
+*.orig
+*.tmp
+*.temp
