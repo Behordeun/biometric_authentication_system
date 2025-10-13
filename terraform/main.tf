@@ -12,12 +12,17 @@ provider "aws" {
   region = var.aws_region
 }
 
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
+# Local variable for common tags
+locals {
+  vpc_tags = {
     Name = "auth-system-vpc"
   }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block  = "10.0.0.0/16"
+
+  tags = local.vpc_tags
 }
 
 resource "aws_db_instance" "postgres" {
@@ -31,10 +36,15 @@ resource "aws_db_instance" "postgres" {
   username          = var.db_username
   password          = var.db_password
   multi_az          = true
+  iam_database_authentication_enabled = true
 
   tags = {
     Name        = "auth-postgres"
     Environment = var.environment
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -51,15 +61,26 @@ resource "aws_elasticache_cluster" "redis" {
     Name        = "auth-redis"
     Environment = var.environment
   }
+
+  lifecycle {
+    create_before_destroy = true
+    prevent_destroy       = true
+  }
 }
 
 resource "aws_secretsmanager_secret" "auth_secrets" {
-  name = "auth-system-secrets-${var.environment}"
+  name        = "auth-system-secrets-${var.environment}"
+  kms_key_id  = var.secretsmanager_kms_key_id
 
   tags = {
     Name        = "auth-secrets"
     Environment = var.environment
   }
+}
+
+variable "secretsmanager_kms_key_id" {
+  description = "KMS Key ID for encrypting Secrets Manager secrets"
+  type        = string
 }
 
 resource "aws_secretsmanager_secret_version" "auth_secrets" {
