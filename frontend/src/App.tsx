@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
 import axios from 'axios';
-
-const API_URL = 'http://localhost:8000';
+import { API_URL } from './config';
 
 function App() {
   const [registerEmail, setRegisterEmail] = useState('');
@@ -18,23 +17,50 @@ function App() {
         return;
       }
 
-      const optionsRes = await axios.post(`${API_URL}/auth/register/options`, {
-        email: registerEmail,
-        username
-      });
+      // Ensure API_URL uses HTTPS
+      if (!API_URL.startsWith('https://')) {
+        setMessage('Insecure connection detected. Please use HTTPS for all API requests.');
+        return;
+      }
 
-      const credential = await startRegistration(optionsRes.data);
+      let optionsRes;
+      try {
+        optionsRes = await axios.post(`${API_URL}/auth/register/options`, {
+          email: registerEmail,
+          username
+        });
+      } catch (error: any) {
+        setMessage(`Failed to get registration options: ${error.response?.data?.detail || error.message}`);
+        return;
+      }
 
-      const verifyRes = await axios.post(`${API_URL}/auth/register/verify`, {
-        email: registerEmail,
-        credential
-      });
+      let credential;
+      try {
+        credential = await startRegistration(optionsRes.data);
+      } catch (error: any) {
+        setMessage(`Biometric registration failed: ${error.message || JSON.stringify(error)}`);
+        return;
+      }
 
-      setToken(verifyRes.data.access_token);
-      setMessage('Registration successful! You can now use biometric login.');
+      let verifyRes;
+      try {
+        verifyRes = await axios.post(`${API_URL}/auth/register/verify`, {
+          email: registerEmail,
+          username,
+          credential
+        });
+      } catch (error: any) {
+        setMessage(`Failed to verify registration: ${error.response?.data?.detail || error.message}`);
+        return;
+      }
+
+      if (verifyRes.data && verifyRes.data.success) {
+        setMessage('Registration successful! You can now log in.');
+      } else {
+        setMessage('Registration verification failed.');
+      }
     } catch (error: any) {
-      const errorMsg = error.response?.data?.detail || error.message || JSON.stringify(error);
-      setMessage(`Registration failed: ${errorMsg}`);
+      setMessage(`Registration failed: ${error.message || JSON.stringify(error)}`);
     }
   };
 
@@ -45,12 +71,22 @@ function App() {
         return;
       }
 
+      // Ensure API_URL uses HTTPS
+      if (!API_URL.startsWith('https://')) {
+        setMessage('Insecure connection detected. Please use HTTPS for all API requests.');
+        return;
+      }
       const optionsRes = await axios.post(`${API_URL}/auth/login/options`, {
         email: loginEmail
       });
 
       const credential = await startAuthentication(optionsRes.data);
 
+      // Ensure API_URL uses HTTPS before sending sensitive information
+      if (!API_URL.startsWith('https://')) {
+        setMessage('Insecure connection detected. Please use HTTPS for all API requests.');
+        return;
+      }
       const verifyRes = await axios.post(`${API_URL}/auth/login/verify`, {
         email: loginEmail,
         credential
@@ -66,6 +102,10 @@ function App() {
 
   const getUserInfo = async () => {
     try {
+      if (!API_URL.startsWith('https://')) {
+        setMessage('Insecure connection detected. Please use HTTPS for all API requests.');
+        return;
+      }
       const res = await axios.get(`${API_URL}/userinfo`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -76,64 +116,66 @@ function App() {
   };
 
   return (
-    <div style={{ padding: '40px', maxWidth: '600px', margin: '0 auto' }}>
-      <h1>🔐 Hybrid Auth System</h1>
-      <p>Passwordless authentication using biometrics (fingerprint, Face ID)</p>
+    return (
+      <div style={{ padding: '40px', maxWidth: '600px', margin: '0 auto' }}>
+        <h1>🔐 Hybrid Auth System</h1>
+        <p>Passwordless authentication using biometrics (fingerprint, Face ID)</p>
 
-      <div style={{ marginBottom: '20px' }}>
-        <h2>Register</h2>
-        <input
-          type="email"
-          placeholder="Email"
-          value={registerEmail}
-          onChange={(e) => setRegisterEmail(e.target.value)}
-          style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-        />
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-        />
-        <button onClick={handleRegister} style={{ padding: '10px 20px' }}>
-          Register with Biometric
-        </button>
-      </div>
-
-      <div style={{ marginBottom: '20px' }}>
-        <h2>Login</h2>
-        <input
-          type="email"
-          placeholder="Email"
-          value={loginEmail}
-          onChange={(e) => setLoginEmail(e.target.value)}
-          style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-        />
-        <button onClick={handleLogin} style={{ padding: '10px 20px' }}>
-          Login with Biometric
-        </button>
-      </div>
-
-      {token && (
         <div style={{ marginBottom: '20px' }}>
-          <button onClick={getUserInfo} style={{ padding: '10px 20px' }}>
-            Get User Info
+          <h2>Register</h2>
+          <input
+            type="email"
+            placeholder="Email"
+            value={registerEmail}
+            onChange={(e) => setRegisterEmail(e.target.value)}
+            style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
+          />
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
+          />
+          <button onClick={handleRegister} style={{ padding: '10px 20px' }}>
+            Register with Biometric
           </button>
         </div>
-      )}
 
-      {message && (
-        <div style={{
-          padding: '15px',
-          backgroundColor: '#f0f0f0',
-          borderRadius: '5px',
-          whiteSpace: 'pre-wrap'
-        }}>
-          {message}
+        <div style={{ marginBottom: '20px' }}>
+          <h2>Login</h2>
+          <input
+            type="email"
+            placeholder="Email"
+            value={loginEmail}
+            onChange={(e) => setLoginEmail(e.target.value)}
+            style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
+          />
+          <button onClick={handleLogin} style={{ padding: '10px 20px' }}>
+            Login with Biometric
+          </button>
         </div>
-      )}
-    </div>
+
+        {token && (
+          <div style={{ marginBottom: '20px' }}>
+            <button onClick={getUserInfo} style={{ padding: '10px 20px' }}>
+              Get User Info
+            </button>
+          </div>
+        )}
+
+        {message && (
+          <div style={{
+            padding: '15px',
+            backgroundColor: '#f0f0f0',
+            borderRadius: '5px',
+            whiteSpace: 'pre-wrap'
+          }}>
+            {message}
+          </div>
+        )}
+      </div>
+    );
   );
 }
 
