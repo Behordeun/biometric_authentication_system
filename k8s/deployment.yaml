@@ -12,24 +12,39 @@ spec:
       labels:
         app: auth-api
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: auth-api
-        image: auth-api:latest
+        image: auth-api:1.0.0
+        imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8000
+          - containerPort: 8000
         env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: auth-secrets
-              key: database-url
+          - name: DATABASE_URL
+            valueFrom:
+              secretKeyRef:
+                name: auth-secrets
+                key: database-url
         resources:
           requests:
             memory: "256Mi"
             cpu: "250m"
+            ephemeral-storage: "512Mi"
           limits:
             memory: "512Mi"
             cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
 
 ---
 
