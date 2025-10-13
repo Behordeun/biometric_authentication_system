@@ -77,3 +77,6 @@ logs/
 *.orig
 *.tmp
 *.temp
+
+# Database
+migrations
