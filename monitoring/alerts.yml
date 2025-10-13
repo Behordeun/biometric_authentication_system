@@ -8,3 +8,4 @@ groups:
           severity: warning
         annotations:
           summary: "High authentication failure rate"
+          description: "This alert fires when the authentication failure rate exceeds 10 failures per 5 minutes, indicating potential issues with user logins or possible brute-force attempts."

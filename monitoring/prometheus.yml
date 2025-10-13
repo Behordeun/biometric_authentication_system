@@ -1,7 +1,10 @@
 global:
-  scrape_interval: 15s
+  scrape_interval: 30s
 
+# Configuration for Prometheus scrape jobs
 scrape_configs:
+  # Scrape configuration for the authentication API service
   - job_name: 'auth-api'
     static_configs:
-      - targets: ['auth-api:8000']
+      - targets:
+          - 'auth-api:8000'
