@@ -1,0 +1,44 @@
+%%{init: { 'theme': 'default', 'themeVariables': { 'background': '#ffffff' } }}%%
+graph LR
+    subgraph "Threats"
+        T1[Biometric Spoofing]
+        T2[Credential Cloning]
+        T3[Replay Attacks]
+        T4[Device Spoofing]
+        T5[Account Takeover]
+    end
+
+    subgraph "Mitigations"
+        M1[Liveness Detection]
+        M2[Platform Authenticators]
+        M3[Sign Count Validation]
+        M4[Device Fingerprinting]
+        M5[Behavioral Analysis]
+        M6[Rate Limiting]
+        M7[Attestation Validation]
+    end
+
+    T1 --> M1
+    T1 --> M2
+    T1 --> M7
+    T2 --> M3
+    T2 --> M4
+    T3 --> M3
+    T3 --> M6
+    T4 --> M4
+    T4 --> M7
+    T5 --> M5
+    T5 --> M6
+
+    style T1 fill:#ffebee
+    style T2 fill:#ffebee
+    style T3 fill:#ffebee
+    style T4 fill:#ffebee
+    style T5 fill:#ffebee
+    style M1 fill:#e8f5e8
+    style M2 fill:#e8f5e8
+    style M3 fill:#e8f5e8
+    style M4 fill:#e8f5e8
+    style M5 fill:#e8f5e8
+    style M6 fill:#e8f5e8
+    style M7 fill:#e8f5e8

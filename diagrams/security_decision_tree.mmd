@@ -1,0 +1,36 @@
+%%{init: { 'theme': 'default', 'themeVariables': { 'background': '#ffffff' } }}%%
+graph TD
+    A[Authentication Request] --> B{Rate Limited?}
+    B -->|Yes| C[Block Request]
+    B -->|No| D{Device Known?}
+
+    D -->|No| E[Enhanced Validation]
+    D -->|Yes| F{Behavioral Normal?}
+
+    E --> G{Liveness Detected?}
+    G -->|No| H[Reject - Spoofing]
+    G -->|Yes| I{Attestation Valid?}
+
+    I -->|No| J[Reject - Invalid Device]
+    I -->|Yes| K[Allow with Monitoring]
+
+    F -->|No| L{Suspicious Level?}
+    F -->|Yes| M[Standard Flow]
+
+    L -->|High| N[Block + Alert]
+    L -->|Medium| O[Additional Verification]
+    L -->|Low| P[Allow with Logging]
+
+    O --> Q{Challenge Passed?}
+    Q -->|Yes| R[Allow Access]
+    Q -->|No| S[Block Access]
+
+    style C fill:#ffcdd2
+    style H fill:#ffcdd2
+    style J fill:#ffcdd2
+    style N fill:#ffcdd2
+    style S fill:#ffcdd2
+    style R fill:#c8e6c9
+    style M fill:#c8e6c9
+    style K fill:#fff9c4
+    style P fill:#fff9c4

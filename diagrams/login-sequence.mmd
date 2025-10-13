@@ -1,75 +1,85 @@
 %%{init: { 'theme': 'default', 'themeVariables': { 'background': '#ffffff' } }}%%
 sequenceDiagram
-    participant User
-    participant Browser
-    participant Frontend
-    participant AuthAPI
-    participant Redis
-    participant WebAuthn
-    participant Database
-    participant Device
+    participant U as User
+    participant B as Browser
+    participant F as Frontend
+    participant SM as Security Middleware
+    participant AS as Auth Service
+    participant SS as Security Service
+    participant WS as WebAuthn Service
+    participant DB as Database
+    participant R as Redis
 
-    User->>Browser: Enter email
-    User->>Browser: Click Login with Biometric
-    
-    Browser->>Frontend: Submit form
-    Frontend->>AuthAPI: POST /auth/login/options
-    
-    AuthAPI->>Database: SELECT user
-    Database->>AuthAPI: Return user
-    
-    AuthAPI->>Database: SELECT credentials
-    Database->>AuthAPI: Return credentials
-    
-    AuthAPI->>WebAuthn: Generate auth options
-    WebAuthn->>WebAuthn: Create challenge
-    
-    WebAuthn->>AuthAPI: Return options
-    AuthAPI->>Redis: SETEX challenge 300
-    Redis->>AuthAPI: OK
-    
-    AuthAPI->>Frontend: Return options
-    
-    Frontend->>Browser: navigator.credentials.get()
-    Browser->>Device: Request biometric
-    Device->>User: Show Touch ID prompt
-    
-    User->>Device: Authenticate
-    Device->>Device: Sign challenge
-    
-    Device->>Browser: Return assertion
-    Browser->>Frontend: Authentication successful
-    
-    Frontend->>AuthAPI: POST /auth/login/verify
-    
-    AuthAPI->>Redis: GET challenge
-    Redis->>AuthAPI: Return challenge
-    
-    AuthAPI->>Database: SELECT credential
-    Database->>AuthAPI: Return credential
-    
-    AuthAPI->>WebAuthn: Verify response
-    WebAuthn->>WebAuthn: Verify signature
-    WebAuthn->>WebAuthn: Verify counter
-    
-    WebAuthn->>AuthAPI: Verification successful
-    
-    AuthAPI->>Database: BEGIN TRANSACTION
-    
-    AuthAPI->>Database: UPDATE credential counter
-    Database->>AuthAPI: Updated
-    
-    AuthAPI->>AuthAPI: Generate tokens
-    
-    AuthAPI->>Database: INSERT session
-    Database->>AuthAPI: Session created
-    
-    AuthAPI->>Database: COMMIT
-    Database->>AuthAPI: Committed
-    
-    AuthAPI->>Redis: DEL challenge
-    
-    AuthAPI->>Frontend: Return tokens
-    
-    Frontend->>Browser: Store tokens
-    Browser->>User: Login successful
+    Note over U,R: Enhanced Authentication with Behavioral Analysis
+
+    U->>B: Access Login
+    B->>F: Load Login Page
+    F->>SM: POST /auth/login/options
+
+    Note over SM: Multi-Layer Security Checks
+    SM->>SM: Rate Limit Validation
+    SM->>SM: Device Fingerprint Generation
+    SM->>SM: Geographic Analysis
+
+    SM->>AS: Validated Request
+    AS->>DB: Find User
+    AS->>SS: Check Account Lockout
+    AS->>SS: Detect Suspicious Activity
+
+    Note over SS: Behavioral Analysis
+    SS->>SS: Analyze Access Patterns
+    SS->>SS: Check Device History
+    SS->>SS: Geographic Anomaly Detection
+
+    AS->>WS: Generate Auth Options
+    WS->>DB: Get Active Credentials
+    WS->>WS: Filter Valid Credentials
+    WS->>WS: Enhanced Security Extensions
+
+    WS-->>AS: Authentication Options
+    AS->>R: Store Challenge + Security Metadata
+    AS->>SS: Log Security Event
+    AS-->>F: Authentication Options
+
+    F->>B: navigator.credentials.get()
+    B->>U: Biometric Prompt
+    U->>B: Biometric Input
+
+    Note over B: Hardware Validation
+    B->>B: Liveness Detection
+    B->>B: User Verification Required
+    B->>B: Platform Authenticator
+
+    B-->>F: WebAuthn Assertion
+    F->>SM: POST /auth/login/verify
+
+    Note over SM: Comprehensive Security Validation
+    SM->>SM: Device Consistency Check
+    SM->>SM: Anti-Replay Protection
+    SM->>SM: Request Integrity Validation
+
+    SM->>AS: Validated Assertion
+    AS->>R: Retrieve Challenge Data
+    AS->>SS: Enhanced Biometric Validation
+
+    Note over SS: Anti-Spoofing Checks
+    SS->>SS: Liveness Validation
+    SS->>SS: Presentation Attack Detection
+    SS->>SS: Sign Count Progression Check
+
+    AS->>WS: Verify Authentication
+    WS->>DB: Get Stored Credential
+    WS->>WS: WebAuthn Verification
+    WS->>WS: Sign Count Validation
+    WS->>WS: Authenticator Data Validation
+
+    WS->>DB: Update Sign Count
+    AS->>DB: Create Secure Session
+    AS->>SS: Log Success Event
+    AS-->>F: Authentication Success + Tokens
+    F-->>U: Login Complete
+
+    Note over U,R: Continuous Security Monitoring
+    AS->>SS: Monitor Session Activity
+    SS->>SS: Behavioral Pattern Analysis
+    SS->>SS: Anomaly Detection

@@ -1,0 +1,42 @@
+%%{init: { 'theme': 'default', 'themeVariables': { 'background': '#ffffff' } }}%%
+sequenceDiagram
+    participant U as User
+    participant D as Device
+    participant C as Client App
+    participant M as Security Middleware
+    participant A as Auth Service
+    participant S as Security Service
+    participant DB as Database
+
+    Note over U,DB: Registration Flow with Anti-Spoofing
+
+    U->>D: Biometric Input
+    D->>D: Liveness Check
+    D->>C: WebAuthn Credential
+    C->>M: Registration Request
+    M->>M: Rate Limit Check
+    M->>M: Device Fingerprint
+    M->>A: Validated Request
+    A->>S: Security Validation
+    S->>S: Presentation Attack Detection
+    S->>S: Credential Uniqueness Check
+    A->>DB: Store Encrypted Credential
+    DB->>A: Success
+    A->>C: Registration Complete
+
+    Note over U,DB: Authentication Flow with Enhanced Security
+
+    U->>D: Biometric Input
+    D->>D: Liveness Validation
+    D->>C: WebAuthn Response
+    C->>M: Auth Request
+    M->>M: Device Consistency Check
+    M->>M: Anti-Replay Validation
+    M->>A: Validated Request
+    A->>S: Behavioral Analysis
+    S->>S: Suspicious Activity Check
+    S->>S: Sign Count Validation
+    A->>DB: Verify Credential
+    DB->>A: Credential Valid
+    A->>S: Log Security Event
+    A->>C: Authentication Success

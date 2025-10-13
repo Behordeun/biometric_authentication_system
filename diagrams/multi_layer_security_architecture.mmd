@@ -1,0 +1,46 @@
+%%{init: { 'theme': 'default', 'themeVariables': { 'background': '#ffffff' } }}%%
+graph TB
+    subgraph "Client Layer"
+        A[User Device] --> B[Biometric Sensor]
+        B --> C[Platform Authenticator]
+        C --> D[WebAuthn API]
+    end
+
+    subgraph "Network Layer"
+        D --> E[HTTPS/TLS 1.3]
+        E --> F[CORS Validation]
+        F --> G[Origin Verification]
+    end
+
+    subgraph "Security Middleware Stack"
+        G --> H[Security Middleware]
+        H --> I[Biometric Security Middleware]
+        I --> J[Anti-Replay Middleware]
+        J --> K[Rate Limiting]
+    end
+
+    subgraph "Authentication Layer"
+        K --> L[WebAuthn Service]
+        L --> M[Liveness Detection]
+        M --> N[Presentation Attack Detection]
+        N --> O[Device Fingerprinting]
+    end
+
+    subgraph "Security Services"
+        O --> P[Security Service]
+        P --> Q[Behavioral Analysis]
+        Q --> R[Threat Detection]
+        R --> S[Account Protection]
+    end
+
+    subgraph "Data Layer"
+        S --> T[Encrypted Database]
+        T --> U[Audit Logging]
+        U --> V[Security Monitoring]
+    end
+
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style L fill:#e8f5e8
+    style P fill:#fff3e0
+    style T fill:#fce4ec

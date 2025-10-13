@@ -90,3 +90,5 @@ docs/*
 !docs/LOGGING_SYSTEM.md
 !docs/REFACTORING.md
 !docs/CHANGELOG.md
+
+diagrams/*.md

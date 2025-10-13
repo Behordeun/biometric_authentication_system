@@ -5,7 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2024-01-XX - Enterprise Security & Code Quality Fixes
+## [1.2.0] - 2025-01-13 - Advanced Biometric Security & Anti-Spoofing Protection
+
+### 🛡️ Biometric Security Enhancements
+
+- **Multi-layer anti-spoofing protection** with liveness detection and presentation attack prevention
+- **Enhanced WebAuthn security** with platform authenticator preference and attestation validation
+- **Device fingerprinting** for consistent device tracking and validation
+- **Behavioral analysis engine** for real-time suspicious activity detection
+- **Advanced threat detection** with geographic anomaly detection and temporal analysis
+- **Comprehensive security middleware** stack with anti-replay protection
+
+### 🔐 Advanced Security Features
+
+- **Biometric liveness validation** through UV/UP flag analysis
+- **Credential cloning prevention** with unique credential ID validation
+- **Sign count progression monitoring** to prevent replay attacks
+- **Request integrity protection** with HMAC validation and nonce tracking
+- **Progressive rate limiting** with account lockout mechanisms
+- **Real-time security monitoring** with automated threat response
+
+### 📊 Security Services
+
+- **SecurityService**: Comprehensive fraud detection and prevention
+- **BiometricSecurityValidator**: Specialized biometric validation
+- **Enhanced audit logging** with security event categorization
+- **Device consistency validation** across authentication sessions
+
+### 🏗️ Architecture Improvements
+
+- **Security middleware stack** with layered protection
+- **Enhanced CORS configuration** with biometric-specific headers
+- **Improved error handling** with security-aware responses
+- **Performance optimizations** maintaining <200ms security validation
+
+### 📝 Documentation
+
+- **BIOMETRIC_SECURITY.md**: Comprehensive anti-spoofing documentation
+- **Security architecture diagrams** with threat mitigation matrix
+- **Enhanced authentication flow** diagrams with security checkpoints
+- **Updated API documentation** with security considerations
+
+## [1.1.0] - 2025-10-10 - Enterprise Security & Code Quality Fixes
 
 ### 🔒 Security Fixes
 

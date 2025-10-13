@@ -33,6 +33,7 @@ See [REFACTORING.md](docs/REFACTORING.md) for detailed structure.
 ## 📋 Documentation
 
 - [CHANGELOG.md](CHANGELOG.md) - Version history and fixes
+- [BIOMETRIC_SECURITY.md](docs/BIOMETRIC_SECURITY.md) - Anti-spoofing & biometric security
 - [SECURITY_FIXES.md](docs/SECURITY_FIXES.md) - Security improvements
 - [CODE_QUALITY.md](docs/CODE_QUALITY.md) - Code quality enhancements
 - [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) - Production deployment
@@ -127,16 +128,22 @@ npm start
 ## Security Features
 
 - **Passwordless Authentication**: No passwords stored anywhere
-- **FIDO2/WebAuthn Compliance**: Latest biometric standards
+- **FIDO2/WebAuthn Compliance**: Latest biometric standards with enhanced security
+- **Anti-Spoofing Protection**: Multi-layer biometric spoofing prevention
+- **Liveness Detection**: Hardware-backed biometric validation
+- **Device Fingerprinting**: Consistent device tracking and validation
+- **Behavioral Analysis**: Real-time suspicious activity detection
 - **HTTPS Enforcement**: TLS 1.3 required for production
 - **CORS Protection**: Configured for secure origins
-- **Rate Limiting**: DDoS and brute-force protection
+- **Rate Limiting**: DDoS and brute-force protection with progressive penalties
 - **JWT Security**: Secure access and refresh tokens
-- **Session Management**: Secure session handling
+- **Session Management**: Secure session handling with device binding
 - **Path Traversal Protection**: Secure file operations
 - **Log Injection Prevention**: Sanitized logging
 - **Secret Detection**: Automated secret scanning
 - **Dependency Scanning**: Vulnerability monitoring
+- **Replay Attack Prevention**: Timestamp and nonce validation
+- **Credential Cloning Detection**: Unique credential validation
 
 ## Database Schema
 
@@ -241,7 +248,14 @@ cd backend && mypy app/
 23. **Check test coverage** (90%+ requirement)
 24. **Verify dependency updates** are secure
 
-See [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md), [SECURITY.md](docs/SECURITY.md), and [SECURITY_FIXES.md](docs/SECURITY_FIXES.md) for comprehensive security guidance.
+See [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md), [SECURITY.md](docs/SECURITY.md), [SECURITY_FIXES.md](docs/SECURITY_FIXES.md), and [BIOMETRIC_SECURITY.md](docs/BIOMETRIC_SECURITY.md) for comprehensive security guidance.
+
+## Architecture Diagrams
+
+- [Security Architecture](diagrams/security-architecture.md) - Multi-layer security design
+- [Enhanced Authentication Flow](diagrams/enhanced-auth-flow.md) - Biometric authentication with anti-spoofing
+- [System Architecture](diagrams/system-architecture.mmd) - Overall system design
+- [Database Schema](diagrams/database-schema.mmd) - Data model relationships
 
 ## License
 

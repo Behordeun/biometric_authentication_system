@@ -1,58 +1,71 @@
 %%{init: { 'theme': 'default', 'themeVariables': { 'background': '#ffffff' } }}%%
-flowchart TD
-    Start([User Visits App]) --> CheckAccount{Has Account?}
-    
-    CheckAccount -->|No| EnterEmail[Enter Email & Username]
-    CheckAccount -->|Yes| LoginFlow[Go to Login Flow]
-    
-    EnterEmail --> RequestOptions[Click Register with Biometric]
-    RequestOptions --> FrontendReq[Frontend: POST /auth/register/options]
-    
-    FrontendReq --> BackendCheck{User Exists?}
-    BackendCheck -->|Yes| Error1[Return Error: User Exists]
-    BackendCheck -->|No| GenerateChallenge[Generate WebAuthn Challenge]
-    
-    GenerateChallenge --> StoreChallenge[Store Challenge in Redis<br/>TTL: 5 minutes]
-    StoreChallenge --> ReturnOptions[Return Registration Options]
-    
-    ReturnOptions --> BrowserPrompt[Browser Shows Biometric Prompt]
-    
-    BrowserPrompt --> UserAuth{User Authenticates?}
-    UserAuth -->|Cancel| Error2[Registration Cancelled]
-    UserAuth -->|Success| DeviceCreatesKey[Device Creates Key Pair]
-    
-    DeviceCreatesKey --> SignChallenge[Device Signs Challenge]
-    SignChallenge --> ReturnCredential[Return Public Key + Signature]
-    
-    ReturnCredential --> VerifyReq[Frontend: POST /auth/register/verify]
-    VerifyReq --> GetChallenge[Retrieve Challenge from Redis]
-    
-    GetChallenge --> ValidChallenge{Challenge Valid?}
-    ValidChallenge -->|No| Error3[Error: Challenge Expired]
-    ValidChallenge -->|Yes| VerifySignature[Verify Signature]
-    
-    VerifySignature --> SigValid{Signature Valid?}
-    SigValid -->|No| Error4[Error: Invalid Signature]
-    SigValid -->|Yes| CreateUser[Create User Record]
-    
-    CreateUser --> StoreCredential[Store Public Key]
-    StoreCredential --> GenerateTokens[Generate JWT Tokens]
-    
-    GenerateTokens --> CreateSession[Create Session]
-    CreateSession --> ReturnTokens[Return Tokens]
-    
-    ReturnTokens --> Success([Registration Complete])
-    
-    Error1 --> End([End])
-    Error2 --> End
-    Error3 --> End
-    Error4 --> End
-    LoginFlow --> End
+sequenceDiagram
+    participant U as User
+    participant B as Browser
+    participant F as Frontend
+    participant SM as Security Middleware
+    participant AS as Auth Service
+    participant SS as Security Service
+    participant WS as WebAuthn Service
+    participant DB as Database
+    participant R as Redis
 
-    style Start fill:#e1f5ff
-    style Success fill:#c8e6c9
-    style Error1 fill:#ffcdd2
-    style Error2 fill:#ffcdd2
-    style Error3 fill:#ffcdd2
-    style Error4 fill:#ffcdd2
-    style BrowserPrompt fill:#fff9c4
+    Note over U,R: Enhanced Registration with Anti-Spoofing Protection
+
+    U->>B: Access Registration
+    B->>F: Load Registration Page
+    F->>SM: POST /auth/register/options
+
+    Note over SM: Security Validation Layer
+    SM->>SM: Rate Limit Check
+    SM->>SM: Generate Device Fingerprint
+    SM->>SM: Validate Headers & Origin
+
+    SM->>AS: Validated Request
+    AS->>DB: Check User Exists
+    DB-->>AS: User Status
+
+    AS->>WS: Generate Registration Options
+    Note over WS: Enhanced WebAuthn Options
+    WS->>WS: Platform Authenticator Preference
+    WS->>WS: Require User Verification
+    WS->>WS: Request Attestation
+    WS->>WS: Strong Crypto Algorithms
+
+    WS-->>AS: Registration Options
+    AS->>R: Store Challenge + Metadata
+    AS->>SS: Log Security Event
+    AS-->>F: Registration Options
+
+    F->>B: navigator.credentials.create()
+    B->>U: Biometric Prompt
+    U->>B: Biometric Input
+
+    Note over B: Hardware Security Validation
+    B->>B: Liveness Detection
+    B->>B: Platform Authenticator
+    B->>B: User Verification
+
+    B-->>F: WebAuthn Credential
+    F->>SM: POST /auth/register/verify
+
+    Note over SM: Enhanced Security Validation
+    SM->>SM: Device Fingerprint Match
+    SM->>SM: Request Integrity Check
+    SM->>SM: Anti-Replay Validation
+
+    SM->>AS: Validated Credential
+    AS->>R: Retrieve Challenge Data
+    AS->>SS: Validate Biometric Quality
+    SS->>SS: Presentation Attack Detection
+    SS->>SS: Credential Uniqueness Check
+
+    AS->>WS: Verify Registration
+    WS->>WS: WebAuthn Verification
+    WS->>WS: Attestation Validation
+    WS->>WS: Liveness Validation
+
+    WS->>DB: Store Encrypted Credential
+    AS->>SS: Log Success Event
+    AS-->>F: Registration Success + Tokens
+    F-->>U: Registration Complete
