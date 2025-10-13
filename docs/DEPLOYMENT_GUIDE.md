@@ -200,8 +200,8 @@ groups:
 # Automated daily backups
 pg_dump -h <db-host> -U authuser authdb | gzip > backup-$(date +%Y%m%d).sql.gz
 
-# Upload to S3
-aws s3 cp backup-$(date +%Y%m%d).sql.gz s3://backups/auth-system/
+# Upload to S3 (use a unique, non-guessable bucket name and least-privilege IAM user)
+aws s3 cp backup-$(date +%Y%m%d).sql.gz s3://your-unique-backup-bucket-name/auth-system/
 ```
 
 ### Retention Policy
@@ -213,6 +213,7 @@ aws s3 cp backup-$(date +%Y%m%d).sql.gz s3://backups/auth-system/
 ## Disaster Recovery
 
 ### RTO (Recovery Time Objective): 1 hour
+
 ### RPO (Recovery Point Objective): 15 minutes
 
 ### Recovery Steps
