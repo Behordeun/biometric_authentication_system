@@ -16,8 +16,12 @@ fi
 # Copy environment file if not exists
 if [ ! -f .env ]; then
     echo "📝 Creating .env file from template..."
-    cp ../config/.env.docker .env
-    echo "✅ .env file created"
+    if cp ../config/.env.docker .env; then
+        echo "✅ .env file created"
+    else
+        echo "❌ Failed to create .env file from template. Please check if ../config/.env.docker exists and try again."
+        exit 1
+    fi
 else
     echo "✅ .env file exists"
 fi
@@ -32,43 +36,59 @@ echo ""
 echo "⏳ Waiting for services to be healthy..."
 sleep 5
 
-# Check service health
+# Function to check service health
+check_service() {
+    local name="$1"
+    local cmd="$2"
+    local healthy_msg="$3"
+    local unhealthy_msg="$4"
+    local retry="${5:-0}"
+    local wait="${6:-0}"
+
+    if eval "$cmd" > /dev/null 2>&1; then
+        echo "✅ $healthy_msg"
+    else
+        if [ "$retry" -gt 0 ]; then
+            echo "⏳ $name: retrying in $wait seconds..."
+            sleep "$wait"
+            if eval "$cmd" > /dev/null 2>&1; then
+                echo "✅ $healthy_msg"
+                return
+            fi
+        fi
+        echo "❌ $unhealthy_msg"
+        exit 1
+    fi
+}
+
 echo ""
 echo "🔍 Checking service health..."
 
 # Check PostgreSQL
-if docker-compose exec -T postgres pg_isready -U authuser > /dev/null 2>&1; then
-    echo "✅ PostgreSQL: healthy"
-else
-    echo "❌ PostgreSQL: unhealthy"
-fi
+check_service "PostgreSQL" \
+    "docker-compose exec -T postgres pg_isready -U authuser" \
+    "PostgreSQL: healthy" \
+    "PostgreSQL: unhealthy"
 
 # Check Redis
-if docker-compose exec -T redis redis-cli -a redispass ping > /dev/null 2>&1; then
-    echo "✅ Redis: healthy"
-else
-    echo "❌ Redis: unhealthy"
-fi
+check_service "Redis" \
+    "docker-compose exec -T redis redis-cli -a redispass ping | grep -q PONG" \
+    "Redis: healthy" \
+    "Redis: unhealthy"
 
-# Check Backend
-if curl -f http://localhost:8000/health > /dev/null 2>&1; then
-    echo "✅ Backend: healthy"
-else
-    echo "⏳ Backend: starting..."
-    sleep 10
-    if curl -f http://localhost:8000/health > /dev/null 2>&1; then
-        echo "✅ Backend: healthy"
-    else
-        echo "❌ Backend: unhealthy"
-    fi
-fi
+# Check Backend (with retry)
+check_service "Backend" \
+    "curl -f http://localhost:8000/health" \
+    "Backend: healthy" \
+    "Backend: unhealthy" \
+    1 10
 
-# Check Frontend
-if curl -f http://localhost:3000 > /dev/null 2>&1; then
-    echo "✅ Frontend: healthy"
-else
-    echo "⏳ Frontend: starting..."
-fi
+# Check Frontend (with retry)
+check_service "Frontend" \
+    "curl -f http://localhost:3000" \
+    "Frontend: healthy" \
+    "Frontend: unhealthy" \
+    1 10
 
 echo ""
 echo "🎉 Services are running!"

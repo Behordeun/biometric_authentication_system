@@ -3,9 +3,10 @@ services:
     image: postgres:16-alpine
     container_name: auth-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-authuser}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-authpass}
-      POSTGRES_DB: ${POSTGRES_DB:-authdb}
+      # Set these environment variables securely in a .env file or CI/CD secrets
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
     ports:
       - "5432:5432"
     volumes:
@@ -31,7 +32,7 @@ services:
     networks:
       - auth-network
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD", "sh", "-c", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -41,9 +42,9 @@ services:
     build:
       context: ../backend
       dockerfile: Dockerfile
-    container_name: auth-backend
+      # Use environment variables for sensitive data; do not hardcode secrets
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-authuser}:${POSTGRES_PASSWORD:-authpass}@postgres:5432/${POSTGRES_DB:-authdb}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
       REDIS_URL: redis://:${REDIS_PASSWORD:-redispass}@redis:6379
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
       ALGORITHM: HS256
