@@ -14,8 +14,7 @@ jobs:
 
       - name: Check PR title
         run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          if ! echo "$PR_TITLE" | grep -qE '^(feat|fix|docs|style|refactor|test|chore):'; then
+          if ! echo "${{ github.event.pull_request.title }}" | grep -qE '^(feat|fix|docs|style|refactor|test|chore):'; then
             echo "PR title must start with: feat:, fix:, docs:, style:, refactor:, test:, or chore:"
             exit 1
           fi
@@ -30,7 +29,10 @@ jobs:
       - name: Check for merge conflicts
         run: |
           git fetch origin ${{ github.base_ref }}
-          if ! git merge-tree $(git merge-base HEAD origin/${{ github.base_ref }}) HEAD origin/${{ github.base_ref }} | grep -q "^changed in both"; then
+          # Calculate the merge base between HEAD and the base branch
+          MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
+          # Check for merge conflicts using git merge-tree
+          if ! git merge-tree $MERGE_BASE HEAD origin/${{ github.base_ref }} | grep -q "^changed in both"; then
             echo "No merge conflicts detected"
           else
             echo "Merge conflicts detected"
@@ -49,7 +51,12 @@ jobs:
       - name: Check PR size
         run: |
           CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | wc -l)
-          CHANGED_LINES=$(git diff --stat origin/${{ github.base_ref }}...HEAD | tail -1 | awk '{print $4+$6}')
+          DIFF_STAT=$(git diff --stat origin/${{ github.base_ref }}...HEAD | tail -1)
+          if [[ -z "$DIFF_STAT" || "$DIFF_STAT" != *"changed"* ]]; then
+            CHANGED_LINES=0
+          else
+            CHANGED_LINES=$(echo "$DIFF_STAT" | awk '{if ($4 ~ /^[0-9]+$/ && $6 ~ /^[0-9]+$/) print $4+$6; else print 0}')
+          fi
 
           echo "Changed files: $CHANGED_FILES"
           echo "Changed lines: $CHANGED_LINES"
