@@ -80,3 +80,13 @@ logs/
 
 # Database
 migrations
+
+# Documentation - Only commit essential docs
+docs/*
+!docs/README.md
+!docs/ARCHITECTURE.md
+!docs/DEPLOYMENT_GUIDE.md
+!docs/SECURITY.md
+!docs/LOGGING_SYSTEM.md
+!docs/REFACTORING.md
+!docs/CHANGELOG.md
