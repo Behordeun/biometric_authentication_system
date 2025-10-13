@@ -1,0 +1,12 @@
+# Terraform Variables Example
+# Copy to terraform.tfvars and fill with actual values
+# terraform.tfvars is in .gitignore - NEVER commit it
+
+aws_region     = "us-east-1"
+db_username    = "authuser"
+db_password    = ""  # Generate with: openssl rand -base64 32
+secret_key     = ""  # Generate with: openssl rand -base64 64
+redis_password = ""  # Generate with: openssl rand -base64 32
+environment    = "production"
+rp_id          = "auth.yourdomain.com"
+origin         = "https://yourdomain.com"
