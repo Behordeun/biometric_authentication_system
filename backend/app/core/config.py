@@ -1,4 +1,7 @@
 from pydantic_settings import BaseSettings
+from pydantic import ValidationError
+import sys
+import logging
 
 
 class Settings(BaseSettings):
@@ -18,4 +21,9 @@ class Settings(BaseSettings):
         env_file = ".env"
 
 
-settings = Settings()
+logger = logging.getLogger("config")
+try:
+    settings = Settings()
+except ValidationError as e:
+    logger.error(f"Configuration validation error: {e}")
+    sys.exit(1)

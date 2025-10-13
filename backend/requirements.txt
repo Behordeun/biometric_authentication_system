@@ -1,6 +1,6 @@
 # Web Framework
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
 
 # Database
 sqlalchemy==2.0.25
@@ -13,7 +13,7 @@ pydantic-settings==2.1.0
 email-validator==2.1.1
 
 # Authentication & Security
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.3.0.post1
 passlib[bcrypt]==1.7.4
 cryptography==42.0.0
 webauthn==2.0.0
@@ -26,10 +26,10 @@ aioredis==2.0.1
 httpx==0.26.0
 
 # Utilities
-python-multipart==0.0.6
+python-multipart==0.0.9
 python-dotenv==1.0.0
 
 # Code Formatting & Linting
 autoflake==2.2.1
-black==23.12.1
-isort==5.13.2
+black==24.4.2
+isort==5.13.3

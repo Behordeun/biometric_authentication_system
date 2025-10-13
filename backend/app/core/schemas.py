@@ -31,6 +31,17 @@ class RegistrationVerification(BaseModel):
     email: EmailStr
     credential: dict
 
+    @classmethod
+    def __get_validators__(cls):
+        yield from super().__get_validators__()
+        yield cls.validate_credential
+
+    @staticmethod
+    def validate_credential(value):
+        if not isinstance(value, dict):
+            raise ValueError("credential must be a dictionary")
+        return value
+
 
 class LoginOptionsRequest(BaseModel):
     email: EmailStr

@@ -1,12 +1,8 @@
-from datetime import datetime, timedelta
 import base64
+from datetime import datetime, timedelta, timezone
 
-import redis.asyncio as redis
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.auth import create_access_token, create_refresh_token, get_current_user
+import aioredis as redis
+from app.core.auth import create_access_token, create_refresh_token
 from app.core.config import settings
 from app.core.schemas import (
     LoginOptionsRequest,
@@ -14,12 +10,14 @@ from app.core.schemas import (
     RegistrationOptionsRequest,
     RegistrationVerification,
     TokenResponse,
-    UserResponse,
 )
 from app.db.database import get_db
 from app.db.models import Session as DBSession
 from app.db.models import User
 from app.services.webauthn_service import WebAuthnService
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
@@ -54,7 +52,9 @@ async def registration_verify(
     db.add(user)
     await db.flush()
 
-    challenge_bytes = base64.urlsafe_b64decode(challenge_b64 + '=' * (4 - len(challenge_b64) % 4))
+    challenge_bytes = base64.urlsafe_b64decode(
+        challenge_b64 + "=" * (4 - len(challenge_b64) % 4)
+    )
     await WebAuthnService.verify_registration(
         request.credential, challenge_bytes, user, db
     )
@@ -65,7 +65,7 @@ async def registration_verify(
     session = DBSession(
         user_id=user.id,
         refresh_token=refresh_token,
-        expires_at=datetime.now() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
     )
     db.add(session)
     await db.commit()
@@ -104,7 +104,9 @@ async def login_verify(request: LoginVerification, db: AsyncSession = Depends(ge
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    challenge_bytes = base64.urlsafe_b64decode(challenge_b64 + '=' * (4 - len(challenge_b64) % 4))
+    challenge_bytes = base64.urlsafe_b64decode(
+        challenge_b64 + "=" * (4 - len(challenge_b64) % 4)
+    )
     await WebAuthnService.verify_authentication(
         request.credential, challenge_bytes, user, db
     )
@@ -115,7 +117,7 @@ async def login_verify(request: LoginVerification, db: AsyncSession = Depends(ge
     session = DBSession(
         user_id=user.id,
         refresh_token=refresh_token,
-        expires_at=datetime.now() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
     )
     db.add(session)
     await db.commit()

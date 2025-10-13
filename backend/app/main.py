@@ -1,15 +1,14 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from sqlalchemy import text
-
 from app.api.routes import auth, oidc
 from app.core import auth as auth_core
 from app.core.logging import get_logger
 from app.db.database import Base, engine
 from app.middleware.logging_middleware import LoggingMiddleware
+from fastapi import Depends, FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 logger = get_logger(__name__)
 
@@ -22,10 +21,14 @@ async def lifespan(app: FastAPI):
     )
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    logger.info(
-        "Application started",
-        additional_info={"action": "startup", "status": "success"},
-    )
+    try:
+        logger.info(
+            "Application started",
+            additional_info={"action": "startup", "status": "success"},
+        )
+    except Exception as log_exc:
+        # Optionally print or handle logging failure
+        print(f"Failed to log application start: {log_exc}")
     yield
 
 
@@ -36,6 +39,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Configure CORS to allow all origins and methods (adjust in production)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -77,12 +81,20 @@ async def health():
 
 
 @app.get("/userinfo")
-async def userinfo(current_user = Depends(auth_core.get_current_user)):
-    return {
-        "id": str(current_user.id),
-        "email": current_user.email,
-        "username": current_user.username,
-    }
+async def userinfo(current_user=Depends(auth_core.get_current_user)):
+    try:
+        return {
+            "id": str(current_user.id),
+            "email": current_user.email,
+            "username": current_user.username,
+        }
+    except Exception as exc:
+        logger.error("Failed to retrieve user info", exc_info=exc)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Failed to retrieve user info."},
+            headers={"Access-Control-Allow-Origin": "*"},
+        )
 
 
 app.include_router(auth.router)

@@ -14,11 +14,11 @@ from typing import Any, Dict, Optional
 class LogLevel(Enum):
     """Logging severity levels"""
 
-    DEBUG = "DEBUG"
-    INFO = "INFO"
-    WARNING = "WARNING"
-    ERROR = "ERROR"
-    CRITICAL = "CRITICAL"
+    DEBUG = "DEBUG"         # Detailed information, typically of interest only when diagnosing problems
+    INFO = "INFO"           # Confirmation that things are working as expected
+    WARNING = "WARNING"     # An indication that something unexpected happened, or indicative of some problem
+    ERROR = "ERROR"         # Due to a more serious problem, the software has not been able to perform some function
+    CRITICAL = "CRITICAL"   # A serious error, indicating that the program itself may be unable to continue running
 
 
 class Logger:
@@ -34,7 +34,16 @@ class Logger:
     """
 
     def __init__(self, log_dir: str | Path = "logs"):
-        self.log_dir = Path(log_dir)
+        # Prevent path traversal by resolving to an absolute path inside a fixed logs directory
+        base_logs_dir = Path.cwd() / "logs"
+        log_dir_path = Path(log_dir).resolve()
+        try:
+            log_dir_path.relative_to(base_logs_dir)
+        except ValueError:
+            # If log_dir is not a subdirectory of base_logs_dir, use base_logs_dir instead
+            log_dir_path = base_logs_dir
+
+        self.log_dir = log_dir_path
         self.log_files = {
             LogLevel.DEBUG: self.log_dir / "debug.log",
             LogLevel.INFO: self.log_dir / "info.log",
@@ -50,20 +59,22 @@ class Logger:
 
     @staticmethod
     def _get_caller_info() -> tuple[str, str]:
-        stack = inspect.stack()
-        caller_frame = next(
-            (frame for frame in stack if frame.filename != __file__),
-            stack[2] if len(stack) > 2 else None,
-        )
-        current_function = caller_frame.function if caller_frame else "Unknown"
-        parent_function = stack[3].function if len(stack) > 3 else "Unknown"
+        frame = inspect.currentframe()
+        current_function = parent_function = "Unknown"
+        if frame is not None:
+            caller = frame.f_back
+            parent = caller.f_back if caller and caller.f_back else None
+            if caller:
+                current_function = caller.f_code.co_name
+            if parent:
+                parent_function = parent.f_code.co_name
         return current_function, parent_function
 
     def _format_message(
         self,
         level: LogLevel,
         message: str,
-        error: Optional[Exception] = None,
+        error: Optional[BaseException] = None,
         additional_info: Optional[Dict[str, Any]] = None,
         exc_info: bool = False,
     ) -> str:
@@ -158,7 +169,7 @@ class Logger:
 
     def error(
         self,
-        error: Exception,
+        error: BaseException,
         additional_info: Optional[Dict[str, Any]] = None,
         exc_info: bool = True,
     ) -> None:
@@ -174,7 +185,7 @@ class Logger:
 
     def critical(
         self,
-        error: Exception,
+        error: BaseException,
         additional_info: Optional[Dict[str, Any]] = None,
         exc_info: bool = True,
     ) -> None:
@@ -195,9 +206,7 @@ class Logger:
         if exc_value is not None:
             self.error(
                 exc_value,
-                additional_info=additional_info
-                if additional_info
-                else {"message": message},
+                additional_info=additional_info or {"message": message},
                 exc_info=True,
             )
         else:
@@ -209,7 +218,12 @@ class Logger:
         try:
             targets = [self.log_files[level]] if level else self.log_files.values()
             for file in targets:
-                with open(file, "w", encoding="utf-8") as f:
+                # Ensure file is within the intended log directory to prevent path traversal
+                file_path = Path(file).resolve()
+                if not str(file_path).startswith(str(self.log_dir.resolve())):
+                    print(f"Skipped clearing log file outside log directory: {file_path}", file=sys.stderr)
+                    continue
+                with open(file_path, "w", encoding="utf-8") as f:
                     f.write("")
             self._log_cache.clear()
         except Exception as e:
@@ -220,6 +234,6 @@ class Logger:
 system_logger = Logger()
 
 
-def get_logger(_name: Optional[str] = None) -> Logger:
+def get_logger(name: Optional[str] = None) -> Logger:
     """Get logger instance"""
     return system_logger
