@@ -53,10 +53,12 @@ services:
       RP_NAME: ${RP_NAME:-Hybrid Auth System}
       ORIGIN: ${ORIGIN:-http://localhost:3000}
       ENVIRONMENT: development
+      LOG_LEVEL: INFO
     ports:
       - "8000:8000"
     volumes:
       - ../backend/app:/app/app:ro
+      - ../backend/logs:/app/logs
     networks:
       - auth-network
     depends_on:
