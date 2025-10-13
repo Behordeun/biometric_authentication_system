@@ -73,7 +73,8 @@ async def health():
             await conn.execute(text("SELECT 1"))
         return {"status": "healthy", "database": "connected", "version": "1.0.0"}
     except Exception as e:
-        return {"status": "unhealthy", "database": "disconnected", "error": str(e)}
+        logger.error("Health check failed", exc_info=True)
+        return {"status": "unhealthy", "database": "disconnected", "error": "Internal server error"}
 
 
 @app.get("/userinfo")
