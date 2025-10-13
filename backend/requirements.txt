@@ -13,7 +13,7 @@ pydantic-settings==2.1.0
 email-validator==2.1.1
 
 # Authentication & Security
-python-jose[cryptography]==3.3.0.post1
+python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 cryptography==42.0.0
 webauthn==2.0.0
