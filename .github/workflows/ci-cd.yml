@@ -52,9 +52,9 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: ${{ secrets.TEST_DB_USER || 'testuser' }}
-          POSTGRES_PASSWORD: ${{ secrets.TEST_DB_PASSWORD || 'testpass' }}
-          POSTGRES_DB: ${{ secrets.TEST_DB_NAME || 'testdb' }}
+          POSTGRES_USER: ${{ secrets.TEST_DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.TEST_DB_NAME }}
         ports:
           - 5432:5432
         options: >-
@@ -95,12 +95,12 @@ jobs:
 
       - name: Run tests with coverage
         env:
-          DATABASE_URL: postgresql+asyncpg://${{ secrets.TEST_DB_USER || 'testuser' }}:${{ secrets.TEST_DB_PASSWORD || 'testpass' }}@localhost:5432/${{ secrets.TEST_DB_NAME || 'testdb' }}
-          REDIS_URL: redis://localhost:6379
-          SECRET_KEY: ${{ secrets.TEST_SECRET_KEY || 'test-secret-key-for-ci-cd-only' }}
+          DATABASE_URL: postgresql+asyncpg://${{ secrets.TEST_DB_USER }}:${{ secrets.TEST_DB_PASSWORD }}@localhost:5432/${{ secrets.TEST_DB_NAME }}
+          REDIS_URL: ${{ secrets.TEST_REDIS_URL }}
+          SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
           RP_ID: localhost
           RP_NAME: Test Auth System
-          ORIGIN: http://localhost:3000
+          ORIGIN: ${{ secrets.TEST_ORIGIN }}
           ENVIRONMENT: test
         run: |
           cd backend
