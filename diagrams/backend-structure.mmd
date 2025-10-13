@@ -1,0 +1,56 @@
+%%{init: { 'theme': 'default', 'themeVariables': { 'background': '#ffffff' } }}%%
+graph TD
+    subgraph "Backend Application Structure"
+        Main[main.py<br/>Application Entry Point]
+
+        subgraph "API Layer"
+            AuthRoutes[api/routes/auth.py<br/>Authentication Endpoints]
+            OIDCRoutes[api/routes/oidc.py<br/>OpenID Connect]
+        end
+
+        subgraph "Core Layer"
+            Config[core/config.py<br/>Settings & Environment]
+            Auth[core/auth.py<br/>JWT Token Management]
+            Schemas[core/schemas.py<br/>Pydantic Models]
+        end
+
+        subgraph "Services Layer"
+            WebAuthn[services/webauthn_service.py<br/>FIDO2 Business Logic]
+        end
+
+        subgraph "Database Layer"
+            Database[db/database.py<br/>SQLAlchemy Engine]
+            Models[db/models.py<br/>Table Definitions]
+        end
+    end
+
+    Main --> AuthRoutes
+    Main --> OIDCRoutes
+
+    AuthRoutes --> Auth
+    AuthRoutes --> Schemas
+    AuthRoutes --> WebAuthn
+    AuthRoutes --> Database
+
+    OIDCRoutes --> Config
+
+    Auth --> Config
+    Auth --> Database
+    Auth --> Models
+
+    WebAuthn --> Config
+    WebAuthn --> Models
+    WebAuthn --> Database
+
+    Database --> Config
+    Models --> Database
+
+    style Main fill:#e1f5ff
+    style AuthRoutes fill:#c8e6c9
+    style OIDCRoutes fill:#c8e6c9
+    style Config fill:#fff9c4
+    style Auth fill:#fff9c4
+    style Schemas fill:#fff9c4
+    style WebAuthn fill:#f0f4c3
+    style Database fill:#f3e5f5
+    style Models fill:#f3e5f5
