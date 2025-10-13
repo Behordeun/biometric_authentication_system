@@ -1,0 +1,70 @@
+%%{init: { 'theme': 'default', 'themeVariables': { 'background': '#ffffff' } }}%%
+flowchart TD
+    Start([User Visits App]) --> EnterEmail[Enter Email Address]
+    
+    EnterEmail --> ClickLogin[Click Login with Biometric]
+    ClickLogin --> FrontendReq[Frontend: POST /auth/login/options]
+    
+    FrontendReq --> FindUser{User Exists?}
+    FindUser -->|No| Error1[Error: User Not Found]
+    FindUser -->|Yes| GetCredentials[Retrieve Biometric Credentials]
+    
+    GetCredentials --> HasCreds{Has Credentials?}
+    HasCreds -->|No| Error2[Error: No Biometric Registered]
+    HasCreds -->|Yes| GenerateChallenge[Generate Challenge]
+    
+    GenerateChallenge --> StoreChallenge[Store Challenge in Redis]
+    StoreChallenge --> ReturnOptions[Return Authentication Options]
+    
+    ReturnOptions --> BrowserPrompt[Browser Shows Biometric Prompt]
+    
+    BrowserPrompt --> UserAuth{User Authenticates?}
+    UserAuth -->|Cancel| Error3[Login Cancelled]
+    UserAuth -->|Success| DeviceSigns[Device Signs Challenge]
+    
+    DeviceSigns --> ReturnAssertion[Return Signature]
+    
+    ReturnAssertion --> VerifyReq[Frontend: POST /auth/login/verify]
+    VerifyReq --> GetChallenge[Retrieve Challenge]
+    
+    GetChallenge --> ValidChallenge{Challenge Valid?}
+    ValidChallenge -->|No| Error4[Error: Challenge Expired]
+    ValidChallenge -->|Yes| FindCredential[Find Credential]
+    
+    FindCredential --> CredFound{Credential Found?}
+    CredFound -->|No| Error5[Error: Credential Not Found]
+    CredFound -->|Yes| VerifySignature[Verify Signature]
+    
+    VerifySignature --> SigValid{Signature Valid?}
+    SigValid -->|No| Error6[Error: Invalid Signature]
+    SigValid -->|Yes| CheckCounter[Check Sign Counter]
+    
+    CheckCounter --> CounterValid{Counter Valid?}
+    CounterValid -->|No| Error7[Error: Replay Attack]
+    CounterValid -->|Yes| UpdateCounter[Update Counter]
+    
+    UpdateCounter --> GenerateTokens[Generate JWT Tokens]
+    
+    GenerateTokens --> CreateSession[Create Session]
+    CreateSession --> ReturnTokens[Return Tokens]
+    
+    ReturnTokens --> Success([Login Complete])
+    
+    Error1 --> End([End])
+    Error2 --> End
+    Error3 --> End
+    Error4 --> End
+    Error5 --> End
+    Error6 --> End
+    Error7 --> End
+
+    style Start fill:#e1f5ff
+    style Success fill:#c8e6c9
+    style Error1 fill:#ffcdd2
+    style Error2 fill:#ffcdd2
+    style Error3 fill:#ffcdd2
+    style Error4 fill:#ffcdd2
+    style Error5 fill:#ffcdd2
+    style Error6 fill:#ffcdd2
+    style Error7 fill:#ffcdd2
+    style BrowserPrompt fill:#fff9c4

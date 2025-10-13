@@ -1,0 +1,75 @@
+%%{init: { 'theme': 'default', 'themeVariables': { 'background': '#ffffff' } }}%%
+sequenceDiagram
+    participant User
+    participant Browser
+    participant Frontend
+    participant AuthAPI
+    participant Redis
+    participant WebAuthn
+    participant Database
+    participant Device
+
+    User->>Browser: Enter email
+    User->>Browser: Click Login with Biometric
+    
+    Browser->>Frontend: Submit form
+    Frontend->>AuthAPI: POST /auth/login/options
+    
+    AuthAPI->>Database: SELECT user
+    Database->>AuthAPI: Return user
+    
+    AuthAPI->>Database: SELECT credentials
+    Database->>AuthAPI: Return credentials
+    
+    AuthAPI->>WebAuthn: Generate auth options
+    WebAuthn->>WebAuthn: Create challenge
+    
+    WebAuthn->>AuthAPI: Return options
+    AuthAPI->>Redis: SETEX challenge 300
+    Redis->>AuthAPI: OK
+    
+    AuthAPI->>Frontend: Return options
+    
+    Frontend->>Browser: navigator.credentials.get()
+    Browser->>Device: Request biometric
+    Device->>User: Show Touch ID prompt
+    
+    User->>Device: Authenticate
+    Device->>Device: Sign challenge
+    
+    Device->>Browser: Return assertion
+    Browser->>Frontend: Authentication successful
+    
+    Frontend->>AuthAPI: POST /auth/login/verify
+    
+    AuthAPI->>Redis: GET challenge
+    Redis->>AuthAPI: Return challenge
+    
+    AuthAPI->>Database: SELECT credential
+    Database->>AuthAPI: Return credential
+    
+    AuthAPI->>WebAuthn: Verify response
+    WebAuthn->>WebAuthn: Verify signature
+    WebAuthn->>WebAuthn: Verify counter
+    
+    WebAuthn->>AuthAPI: Verification successful
+    
+    AuthAPI->>Database: BEGIN TRANSACTION
+    
+    AuthAPI->>Database: UPDATE credential counter
+    Database->>AuthAPI: Updated
+    
+    AuthAPI->>AuthAPI: Generate tokens
+    
+    AuthAPI->>Database: INSERT session
+    Database->>AuthAPI: Session created
+    
+    AuthAPI->>Database: COMMIT
+    Database->>AuthAPI: Committed
+    
+    AuthAPI->>Redis: DEL challenge
+    
+    AuthAPI->>Frontend: Return tokens
+    
+    Frontend->>Browser: Store tokens
+    Browser->>User: Login successful

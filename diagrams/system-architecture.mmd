@@ -1,0 +1,101 @@
+%%{init: { 'theme': 'default', 'themeVariables': { 'background': '#ffffff' } }}%%
+graph TB
+    subgraph "Client Layer"
+        WebApp[Web Application]
+        MobileApp[Mobile Application]
+        ThirdParty[Third-Party Apps]
+    end
+
+    subgraph "Load Balancer / API Gateway"
+        LB[Load Balancer<br/>Nginx/HAProxy]
+        RateLimit[Rate Limiter]
+    end
+
+    subgraph "Application Layer"
+        API1[Auth API Server 1<br/>FastAPI]
+        API2[Auth API Server 2<br/>FastAPI]
+        API3[Auth API Server N<br/>FastAPI]
+    end
+
+    subgraph "Service Layer"
+        WebAuthn[WebAuthn Service<br/>FIDO2 Handler]
+        OAuth[OAuth2 Service<br/>Token Manager]
+        OIDC[OpenID Connect<br/>Identity Provider]
+        Session[Session Manager]
+        Audit[Audit Logger]
+    end
+
+    subgraph "Data Layer"
+        PG[(PostgreSQL<br/>Primary)]
+        PGReplica[(PostgreSQL<br/>Read Replica)]
+        Redis[(Redis Cluster<br/>Cache & Sessions)]
+    end
+
+    subgraph "Storage Layer"
+        S3[Object Storage<br/>S3/MinIO<br/>Audit Logs]
+    end
+
+    subgraph "Monitoring & Security"
+        Prometheus[Prometheus<br/>Metrics]
+        Grafana[Grafana<br/>Dashboards]
+        Vault[HashiCorp Vault<br/>Secrets Management]
+    end
+
+    WebApp --> LB
+    MobileApp --> LB
+    ThirdParty --> LB
+    
+    LB --> RateLimit
+    RateLimit --> API1
+    RateLimit --> API2
+    RateLimit --> API3
+
+    API1 --> WebAuthn
+    API1 --> OAuth
+    API1 --> OIDC
+    API1 --> Session
+    API1 --> Audit
+
+    API2 --> WebAuthn
+    API2 --> OAuth
+    API2 --> OIDC
+    API2 --> Session
+    API2 --> Audit
+
+    API3 --> WebAuthn
+    API3 --> OAuth
+    API3 --> OIDC
+    API3 --> Session
+    API3 --> Audit
+
+    WebAuthn --> PG
+    OAuth --> PG
+    OIDC --> PG
+    Session --> Redis
+    
+    PG --> PGReplica
+    
+    WebAuthn --> Redis
+    OAuth --> Redis
+    
+    Audit --> S3
+    
+    API1 --> Prometheus
+    API2 --> Prometheus
+    API3 --> Prometheus
+    Prometheus --> Grafana
+    
+    API1 --> Vault
+    API2 --> Vault
+    API3 --> Vault
+
+    style WebApp fill:#e1f5ff
+    style MobileApp fill:#e1f5ff
+    style ThirdParty fill:#e1f5ff
+    style LB fill:#fff3e0
+    style API1 fill:#e8f5e9
+    style API2 fill:#e8f5e9
+    style API3 fill:#e8f5e9
+    style PG fill:#f3e5f5
+    style Redis fill:#ffebee
+    style Vault fill:#fce4ec

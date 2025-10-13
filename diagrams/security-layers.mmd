@@ -1,0 +1,66 @@
+%%{init: { 'theme': 'default', 'themeVariables': { 'background': '#ffffff' } }}%%
+graph TD
+    subgraph "Layer 1: Network Security"
+        WAF[Web Application Firewall<br/>DDoS Protection]
+        TLS[TLS 1.3 Encryption<br/>Certificate Management]
+        DNS[DNS Security<br/>DNSSEC]
+    end
+
+    subgraph "Layer 2: Application Security"
+        CORS[CORS Policy<br/>Origin Validation]
+        RateLimit[Rate Limiting<br/>Per IP/User]
+        InputVal[Input Validation<br/>SQL Injection Prevention]
+    end
+
+    subgraph "Layer 3: Authentication Security"
+        WebAuthn[WebAuthn/FIDO2<br/>Biometric Auth]
+        PKI[Public Key Infrastructure<br/>Asymmetric Cryptography]
+        Challenge[Challenge-Response<br/>Replay Prevention]
+    end
+
+    subgraph "Layer 4: Authorization Security"
+        JWT[JWT Tokens<br/>HS256 Signing]
+        Scope[Scope-based Access<br/>Granular Permissions]
+        TokenExp[Token Expiration<br/>Short-lived Access]
+    end
+
+    subgraph "Layer 5: Data Security"
+        Encryption[Data Encryption at Rest<br/>AES-256]
+        Hashing[Secure Hashing<br/>SHA-256]
+        Secrets[Secrets Management<br/>HashiCorp Vault]
+    end
+
+    subgraph "Layer 6: Monitoring & Audit"
+        Logging[Audit Logging<br/>All Auth Events]
+        Alerting[Real-time Alerts<br/>Suspicious Activity]
+        Forensics[Forensic Analysis<br/>Incident Response]
+    end
+
+    WAF --> CORS
+    TLS --> CORS
+    DNS --> CORS
+    
+    CORS --> WebAuthn
+    RateLimit --> WebAuthn
+    InputVal --> WebAuthn
+    
+    WebAuthn --> JWT
+    PKI --> JWT
+    Challenge --> JWT
+    
+    JWT --> Encryption
+    Scope --> Encryption
+    TokenExp --> Encryption
+    
+    Encryption --> Logging
+    Hashing --> Logging
+    Secrets --> Logging
+    
+    Logging --> Alerting
+    Alerting --> Forensics
+
+    style WAF fill:#ffcdd2
+    style WebAuthn fill:#c8e6c9
+    style JWT fill:#fff9c4
+    style Encryption fill:#e1bee7
+    style Logging fill:#b3e5fc

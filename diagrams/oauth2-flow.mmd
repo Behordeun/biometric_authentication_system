@@ -1,0 +1,65 @@
+%%{init: { 'theme': 'default', 'themeVariables': { 'background': '#ffffff' } }}%%
+sequenceDiagram
+    participant User
+    participant ClientApp
+    participant Browser
+    participant AuthServer
+    participant ResourceAPI
+
+    Note over User,ResourceAPI: OAuth2 Authorization Code Flow
+
+    User->>ClientApp: Click Login
+    ClientApp->>Browser: Redirect to /oauth2/authorize
+    
+    Browser->>AuthServer: GET /oauth2/authorize
+    AuthServer->>AuthServer: Validate client_id
+    
+    alt User Not Authenticated
+        AuthServer->>Browser: Show Biometric Login
+        Browser->>User: Prompt Biometric
+        User->>Browser: Authenticate
+        Browser->>AuthServer: POST /auth/login/verify
+        AuthServer->>AuthServer: Verify Credential
+    end
+    
+    AuthServer->>Browser: Show Consent Screen
+    Browser->>User: Display Permissions
+    User->>Browser: Click Allow
+    
+    Browser->>AuthServer: POST /oauth2/authorize/consent
+    AuthServer->>AuthServer: Generate Auth Code
+    AuthServer->>AuthServer: Store code in DB
+    
+    AuthServer->>Browser: Redirect with code
+    Browser->>ClientApp: GET /callback?code=xxx
+    
+    ClientApp->>AuthServer: POST /oauth2/token
+    
+    AuthServer->>AuthServer: Validate Code
+    AuthServer->>AuthServer: Validate Client
+    AuthServer->>AuthServer: Generate Tokens
+    AuthServer->>AuthServer: Delete Code
+    
+    AuthServer->>ClientApp: Return Tokens
+    ClientApp->>ClientApp: Store Tokens
+    ClientApp->>User: Login Successful
+    
+    Note over User,ResourceAPI: Using Access Token
+    
+    User->>ClientApp: Request Data
+    ClientApp->>ResourceAPI: GET /api/data + Bearer Token
+    
+    ResourceAPI->>AuthServer: Validate Token
+    AuthServer->>ResourceAPI: Token Valid
+    ResourceAPI->>ClientApp: Return Data
+    ClientApp->>User: Display Data
+    
+    Note over User,ResourceAPI: Token Refresh
+    
+    ClientApp->>ClientApp: Token Expired
+    ClientApp->>AuthServer: POST /oauth2/token + refresh_token
+    
+    AuthServer->>AuthServer: Validate Refresh Token
+    AuthServer->>AuthServer: Generate New Token
+    AuthServer->>ClientApp: Return New Token
+    ClientApp->>ClientApp: Update Token

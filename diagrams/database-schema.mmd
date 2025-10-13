@@ -1,0 +1,62 @@
+%%{init: { 'theme': 'default', 'themeVariables': { 'background': '#ffffff' } }}%%
+erDiagram
+    users ||--o{ webauthn_credentials : has
+    users ||--o{ sessions : has
+    users ||--o{ oauth_clients : owns
+    users ||--o{ authorization_codes : grants
+
+    users {
+        uuid id PK
+        string email UK
+        string username UK
+        string display_name
+        boolean is_active
+        boolean is_verified
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    webauthn_credentials {
+        uuid id PK
+        uuid user_id FK
+        string credential_id UK
+        text public_key
+        integer sign_count
+        jsonb transports
+        string device_name
+        timestamp created_at
+        timestamp last_used
+    }
+
+    sessions {
+        uuid id PK
+        uuid user_id FK
+        string refresh_token UK
+        timestamp expires_at
+        timestamp created_at
+        string ip_address
+        string user_agent
+    }
+
+    oauth_clients {
+        uuid id PK
+        string client_id UK
+        string client_secret
+        string name
+        jsonb redirect_uris
+        jsonb grant_types
+        string scope
+        uuid owner_id FK
+        timestamp created_at
+    }
+
+    authorization_codes {
+        uuid id PK
+        string code UK
+        string client_id
+        uuid user_id FK
+        string redirect_uri
+        string scope
+        timestamp expires_at
+        timestamp created_at
+    }

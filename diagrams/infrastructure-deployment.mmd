@@ -1,0 +1,111 @@
+%%{init: { 'theme': 'default', 'themeVariables': { 'background': '#ffffff' } }}%%
+graph TB
+    subgraph "Cloud Infrastructure"
+        subgraph "Network Layer"
+            Internet[Internet]
+            DNS[DNS]
+            CDN[CDN]
+            WAF[WAF]
+        end
+        
+        subgraph "Load Balancing"
+            ALB[Application Load Balancer]
+        end
+        
+        subgraph "Availability Zone 1"
+            API1A[Auth API 1A]
+            API2A[Auth API 2A]
+            FE1A[Frontend 1A]
+        end
+        
+        subgraph "Availability Zone 2"
+            API1B[Auth API 1B]
+            API2B[Auth API 2B]
+            FE1B[Frontend 1B]
+        end
+        
+        subgraph "Data Tier"
+            PGPrimary[(PostgreSQL Primary)]
+            PGReplica1[(PostgreSQL Replica 1)]
+            PGReplica2[(PostgreSQL Replica 2)]
+            RedisCluster[(Redis Cluster)]
+        end
+        
+        subgraph "Storage"
+            S3Logs[S3 Logs]
+            S3Backup[S3 Backups]
+        end
+        
+        subgraph "Security"
+            Vault[HashiCorp Vault]
+            KMS[KMS]
+        end
+        
+        subgraph "Monitoring"
+            Prometheus[Prometheus]
+            Grafana[Grafana]
+            ELK[ELK Stack]
+        end
+        
+        subgraph "CI/CD"
+            GitRepo[Git Repository]
+            CI[CI Pipeline]
+            Registry[Container Registry]
+        end
+    end
+
+    Internet --> DNS
+    DNS --> CDN
+    CDN --> WAF
+    WAF --> ALB
+    
+    ALB --> API1A
+    ALB --> API2A
+    ALB --> API1B
+    ALB --> API2B
+    ALB --> FE1A
+    ALB --> FE1B
+    
+    API1A --> RedisCluster
+    API2A --> RedisCluster
+    API1B --> RedisCluster
+    API2B --> RedisCluster
+    
+    API1A --> PGPrimary
+    API2A --> PGPrimary
+    API1B --> PGPrimary
+    API2B --> PGPrimary
+    
+    PGPrimary -.->|Replication| PGReplica1
+    PGPrimary -.->|Replication| PGReplica2
+    
+    API1A --> S3Logs
+    API2A --> S3Logs
+    
+    PGPrimary -.->|Backup| S3Backup
+    
+    API1A --> Vault
+    API2A --> Vault
+    
+    Vault --> KMS
+    
+    API1A --> Prometheus
+    API2A --> Prometheus
+    
+    Prometheus --> Grafana
+    
+    API1A --> ELK
+    API2A --> ELK
+    
+    GitRepo --> CI
+    CI --> Registry
+    Registry --> API1A
+    Registry --> API2A
+
+    style Internet fill:#e3f2fd
+    style ALB fill:#fff3e0
+    style API1A fill:#e8f5e9
+    style API2A fill:#e8f5e9
+    style PGPrimary fill:#f3e5f5
+    style RedisCluster fill:#ffebee
+    style Vault fill:#fce4ec

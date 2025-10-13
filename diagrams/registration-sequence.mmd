@@ -1,0 +1,71 @@
+%%{init: { 'theme': 'default', 'themeVariables': { 'background': '#ffffff' } }}%%
+sequenceDiagram
+    participant User
+    participant Browser
+    participant Frontend
+    participant AuthAPI
+    participant Redis
+    participant WebAuthn
+    participant Database
+    participant Device
+
+    User->>Browser: Enter email & username
+    User->>Browser: Click Register with Biometric
+    
+    Browser->>Frontend: Submit form
+    Frontend->>AuthAPI: POST /auth/register/options
+    
+    AuthAPI->>Database: Check if user exists
+    Database->>AuthAPI: User not found
+    
+    AuthAPI->>WebAuthn: Generate registration options
+    WebAuthn->>WebAuthn: Create challenge
+    
+    WebAuthn->>AuthAPI: Return options
+    AuthAPI->>Redis: SETEX challenge 300
+    Redis->>AuthAPI: OK
+    
+    AuthAPI->>Frontend: Return options
+    
+    Frontend->>Browser: navigator.credentials.create()
+    Browser->>Device: Request biometric
+    Device->>User: Show Touch ID prompt
+    
+    User->>Device: Authenticate
+    Device->>Device: Generate key pair
+    Device->>Device: Sign challenge
+    
+    Device->>Browser: Return credential
+    Browser->>Frontend: Credential created
+    
+    Frontend->>AuthAPI: POST /auth/register/verify
+    
+    AuthAPI->>Redis: GET challenge
+    Redis->>AuthAPI: Return challenge
+    
+    AuthAPI->>WebAuthn: Verify response
+    WebAuthn->>WebAuthn: Verify signature
+    
+    WebAuthn->>AuthAPI: Verification successful
+    
+    AuthAPI->>Database: BEGIN TRANSACTION
+    AuthAPI->>Database: INSERT user
+    Database->>AuthAPI: User created
+    
+    AuthAPI->>Database: INSERT credential
+    Database->>AuthAPI: Credential stored
+    
+    AuthAPI->>AuthAPI: Generate tokens
+    
+    AuthAPI->>Database: INSERT session
+    Database->>AuthAPI: Session created
+    
+    AuthAPI->>Database: COMMIT
+    Database->>AuthAPI: Committed
+    
+    AuthAPI->>Redis: DEL challenge
+    
+    AuthAPI->>Frontend: Return tokens
+    
+    Frontend->>Browser: Store tokens
+    Browser->>User: Registration successful
