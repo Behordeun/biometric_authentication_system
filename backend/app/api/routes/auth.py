@@ -65,7 +65,8 @@ async def registration_verify(
     session = DBSession(
         user_id=user.id,
         refresh_token=refresh_token,
-        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+        expires_at=datetime.now(timezone.utc)
+        + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
     )
     db.add(session)
     await db.commit()
@@ -117,7 +118,8 @@ async def login_verify(request: LoginVerification, db: AsyncSession = Depends(ge
     session = DBSession(
         user_id=user.id,
         refresh_token=refresh_token,
-        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+        expires_at=datetime.now(timezone.utc)
+        + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
     )
     db.add(session)
     await db.commit()

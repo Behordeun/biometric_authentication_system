@@ -49,7 +49,9 @@ class AuditLogger:
             "extra_data": details,
         }
 
-        logger.info(f"Audit: {event_type} - {action} on {resource} | Context: {log_extra}")
+        logger.info(
+            f"Audit: {event_type} - {action} on {resource} | Context: {log_extra}"
+        )
 
         # Store in database
         audit_entry = AuditLog(

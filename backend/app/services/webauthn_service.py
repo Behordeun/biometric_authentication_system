@@ -59,7 +59,9 @@ class WebAuthnService:
             webauthn_cred = WebAuthnCredential(
                 user_id=user.id,
                 credential_id=base64.b64encode(verification.credential_id).decode(),
-                public_key=base64.b64encode(verification.credential_public_key).decode(),
+                public_key=base64.b64encode(
+                    verification.credential_public_key
+                ).decode(),
                 sign_count=verification.sign_count,
                 transports=credential.get("transports", []),
             )
@@ -69,6 +71,7 @@ class WebAuthnService:
         except Exception as exc:
             await db.rollback()
             raise RuntimeError(f"WebAuthn registration verification failed: {exc}")
+
     @staticmethod
     async def generate_authentication_options(user: User, db: AsyncSession):
         try:
@@ -91,6 +94,7 @@ class WebAuthnService:
         except Exception as exc:
             # Optionally log the error here
             raise RuntimeError(f"Failed to generate authentication options: {exc}")
+
     @staticmethod
     async def verify_authentication(
         credential: dict, expected_challenge: bytes, user: User, db: AsyncSession

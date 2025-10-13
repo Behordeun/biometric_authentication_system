@@ -5,7 +5,7 @@ from sqlalchemy.orm import declarative_base
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,  # Set to True only for debugging
-    pool_pre_ping=True  # Helps with connection recycling
+    pool_pre_ping=True,  # Helps with connection recycling
 )
 AsyncSessionLocal = async_sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False

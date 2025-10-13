@@ -1,7 +1,8 @@
-from pydantic_settings import BaseSettings
-from pydantic import ValidationError
-import sys
 import logging
+import sys
+
+from pydantic import ValidationError
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):

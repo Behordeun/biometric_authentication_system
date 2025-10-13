@@ -16,14 +16,18 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
         # Extract request info and sanitize for log injection
         client_ip = request.client.host if request.client else "unknown"
-        method = request.method.replace('\n', '').replace('\r', '')
-        path = request.url.path.replace('\n', '').replace('\r', '')
-        user_agent = request.headers.get("user-agent", "unknown").replace('\n', '').replace('\r', '')
+        method = request.method.replace("\n", "").replace("\r", "")
+        path = request.url.path.replace("\n", "").replace("\r", "")
+        user_agent = (
+            request.headers.get("user-agent", "unknown")
+            .replace("\n", "")
+            .replace("\r", "")
+        )
 
         # Sanitize log message to prevent log injection
-        sanitized_method = method.replace('\n', '').replace('\r', '')
-        sanitized_path = path.replace('\n', '').replace('\r', '')
-        sanitized_user_agent = user_agent.replace('\n', '').replace('\r', '')
+        sanitized_method = method.replace("\n", "").replace("\r", "")
+        sanitized_path = path.replace("\n", "").replace("\r", "")
+        sanitized_user_agent = user_agent.replace("\n", "").replace("\r", "")
 
         # Log request
         logger.info(
@@ -53,7 +57,11 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                     "status_code": response.status_code,
                     "duration_ms": round(duration * 1000, 2),
                     "query_params": dict(request.query_params),
-                    "headers": {k: v for k, v in request.headers.items() if k.lower() not in {"authorization", "cookie"}},
+                    "headers": {
+                        k: v
+                        for k, v in request.headers.items()
+                        if k.lower() not in {"authorization", "cookie"}
+                    },
                     # Optionally, log response body if not too large or sensitive
                     # "response_body": await response.body() if hasattr(response, "body") else None,
                 },
@@ -73,7 +81,11 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                     "path": path,
                     "duration_ms": round(duration * 1000, 2),
                     "query_params": dict(request.query_params),
-                    "headers": {k: v for k, v in request.headers.items() if k.lower() not in {"authorization", "cookie"}},
+                    "headers": {
+                        k: v
+                        for k, v in request.headers.items()
+                        if k.lower() not in {"authorization", "cookie"}
+                    },
                 },
                 exc_info=True,
             )

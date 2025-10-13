@@ -14,11 +14,11 @@ from typing import Any, Dict, Optional
 class LogLevel(Enum):
     """Logging severity levels"""
 
-    DEBUG = "DEBUG"         # Detailed information, typically of interest only when diagnosing problems
-    INFO = "INFO"           # Confirmation that things are working as expected
-    WARNING = "WARNING"     # An indication that something unexpected happened, or indicative of some problem
-    ERROR = "ERROR"         # Due to a more serious problem, the software has not been able to perform some function
-    CRITICAL = "CRITICAL"   # A serious error, indicating that the program itself may be unable to continue running
+    DEBUG = "DEBUG"  # Detailed information, typically of interest only when diagnosing problems
+    INFO = "INFO"  # Confirmation that things are working as expected
+    WARNING = "WARNING"  # An indication that something unexpected happened, or indicative of some problem
+    ERROR = "ERROR"  # Due to a more serious problem, the software has not been able to perform some function
+    CRITICAL = "CRITICAL"  # A serious error, indicating that the program itself may be unable to continue running
 
 
 class Logger:
@@ -221,7 +221,10 @@ class Logger:
                 # Ensure file is within the intended log directory to prevent path traversal
                 file_path = Path(file).resolve()
                 if not str(file_path).startswith(str(self.log_dir.resolve())):
-                    print(f"Skipped clearing log file outside log directory: {file_path}", file=sys.stderr)
+                    print(
+                        f"Skipped clearing log file outside log directory: {file_path}",
+                        file=sys.stderr,
+                    )
                     continue
                 with open(file_path, "w", encoding="utf-8") as f:
                     f.write("")
