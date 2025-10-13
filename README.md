@@ -30,6 +30,14 @@ A modern, enterprise-grade authentication system combining OAuth2, OpenID Connec
 
 See [REFACTORING.md](docs/REFACTORING.md) for detailed structure.
 
+## 📋 Documentation
+
+- [CHANGELOG.md](CHANGELOG.md) - Version history and fixes
+- [SECURITY_FIXES.md](docs/SECURITY_FIXES.md) - Security improvements
+- [CODE_QUALITY.md](docs/CODE_QUALITY.md) - Code quality enhancements
+- [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) - Production deployment
+- [DOCKER_QUICKSTART.md](docs/DOCKER_QUICKSTART.md) - Docker setup guide
+
 ## Tech Stack
 
 **Backend**: Python 3.11+, FastAPI, SQLAlchemy, WebAuthn
@@ -42,6 +50,9 @@ See [REFACTORING.md](docs/REFACTORING.md) for detailed structure.
 ### Using Docker (Recommended)
 
 ```bash
+# Validate environment setup
+./scripts/validate-env.sh
+
 # Start everything
 ./docker/docker-start.sh
 
@@ -115,13 +126,17 @@ npm start
 
 ## Security Features
 
-- No passwords stored anywhere
-- FIDO2/WebAuthn compliance
-- HTTPS required for production
-- CORS configured
-- Rate limiting enabled
-- JWT with refresh tokens
-- Session management
+- **Passwordless Authentication**: No passwords stored anywhere
+- **FIDO2/WebAuthn Compliance**: Latest biometric standards
+- **HTTPS Enforcement**: TLS 1.3 required for production
+- **CORS Protection**: Configured for secure origins
+- **Rate Limiting**: DDoS and brute-force protection
+- **JWT Security**: Secure access and refresh tokens
+- **Session Management**: Secure session handling
+- **Path Traversal Protection**: Secure file operations
+- **Log Injection Prevention**: Sanitized logging
+- **Secret Detection**: Automated secret scanning
+- **Dependency Scanning**: Vulnerability monitoring
 
 ## Database Schema
 
@@ -139,6 +154,9 @@ npm start
 # Generate secrets first
 ./scripts/generate-secrets.sh
 
+# Validate environment setup
+./scripts/validate-env.sh
+
 # Required variables (see .env.example)
 DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/authdb  # pragma: allowlist secret
 REDIS_URL=redis://:password@localhost:6379
@@ -148,37 +166,82 @@ RP_NAME=Hybrid Auth System
 ORIGIN=http://localhost:3000
 ```
 
+### Configuration Management
+
+- **Symlinked .env files**: Single source of truth for configuration
+- **Environment validation**: Automated checks for required variables
+- **Cross-platform support**: Works on Windows, macOS, and Linux
+- **Docker integration**: Seamless container configuration
+
 See [SECURITY.md](docs/SECURITY.md) for detailed secrets management.
 
 ## Development
 
 ```bash
-# Run tests
-pytest
+# Validate environment
+./scripts/validate-env.sh
+
+# Run tests with coverage
+cd backend && pytest --cov=app --cov-report=term
 
 # Database migrations
-alembic upgrade head
+cd backend && alembic upgrade head
 
 # Format code
-black app/
+cd backend && black app/ && isort app/
+
+# Security scan
+make security-scan
+
+# Type checking
+cd backend && mypy app/
 ```
+
+### Code Quality Standards
+
+- **SQLAlchemy 2.0**: Modern ORM with type safety
+- **Type annotations**: Full type coverage with mypy
+- **Error handling**: Comprehensive exception management
+- **Logging**: Structured logging with security considerations
+- **Testing**: 90%+ test coverage requirement
 
 ## Production Deployment
 
 ⚠️ **CRITICAL SECURITY STEPS**:
 
+### Pre-Deployment Security Checklist
 1. **Generate secure secrets** with `./scripts/generate-secrets.sh`
-2. **Use secrets manager** (AWS Secrets Manager, HashiCorp Vault)
-3. **Never commit** .env files or terraform.tfvars
-4. **Use HTTPS only** (TLS 1.3)
-5. **Configure proper CORS** origins
-6. **Set up database backups**
-7. **Enable rate limiting**
-8. **Monitor authentication logs**
-9. **Rotate secrets** every 30-60 days
-10. **Enable secret scanning** in GitHub
+2. **Validate environment** with `./scripts/validate-env.sh`
+3. **Use secrets manager** (AWS Secrets Manager, HashiCorp Vault)
+4. **Never commit** .env files or terraform.tfvars
+5. **Use HTTPS only** (TLS 1.3) - CWE-319 protection
+6. **Configure proper CORS** origins
+7. **Enable path traversal protection** - CWE-22 mitigation
+8. **Implement log injection prevention** - CWE-117 protection
 
-See [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) and [SECURITY.md](docs/SECURITY.md)
+### Infrastructure Security
+9. **Set up database backups** with encryption
+10. **Enable rate limiting** and DDoS protection
+11. **Configure Secrets Manager encryption** (KMS)
+12. **Enable IAM authentication** for RDS
+13. **Set up VPC security groups** and NACLs
+14. **Implement container security** contexts
+
+### Monitoring and Compliance
+15. **Monitor authentication logs** with SIEM integration
+16. **Set up vulnerability scanning** (Snyk, Trivy)
+17. **Enable secret scanning** in GitHub (TruffleHog)
+18. **Configure audit logging** for compliance
+19. **Rotate secrets** every 30-60 days
+20. **Schedule security assessments** quarterly
+
+### Code Quality Assurance
+21. **Run security scans** before deployment
+22. **Validate type safety** with mypy
+23. **Check test coverage** (90%+ requirement)
+24. **Verify dependency updates** are secure
+
+See [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md), [SECURITY.md](docs/SECURITY.md), and [SECURITY_FIXES.md](docs/SECURITY_FIXES.md) for comprehensive security guidance.
 
 ## License
 

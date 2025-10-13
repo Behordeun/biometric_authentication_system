@@ -179,6 +179,10 @@ jobs:
 
       - name: Start services
         run: |
+          # Ensure .env symlink exists
+          if [ ! -L docker/.env ]; then
+            ln -sf ../backend/.env docker/.env
+          fi
           cd docker
           docker-compose up -d
           for i in {1..30}; do

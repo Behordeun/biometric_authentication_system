@@ -13,17 +13,28 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
-# Copy environment file if not exists
-if [ ! -f .env ]; then
-    echo "📝 Creating .env file from template..."
-    if cp ../config/.env.docker .env; then
-        echo "✅ .env file created"
+# Ensure .env symlink exists
+if [ ! -L .env ]; then
+    if [ -f .env ]; then
+        echo "⚠️  Regular .env file found, removing to create symlink..."
+        rm .env
+    fi
+    echo "🔗 Creating .env symlink to ../backend/.env..."
+    if ln -sf ../backend/.env .env; then
+        echo "✅ .env symlink created"
     else
-        echo "❌ Failed to create .env file from template. Please check if ../config/.env.docker exists and try again."
+        echo "❌ Failed to create .env symlink"
         exit 1
     fi
 else
-    echo "✅ .env file exists"
+    echo "✅ .env symlink exists"
+fi
+
+# Validate symlink target exists
+if [ ! -f ../backend/.env ]; then
+    echo "❌ Backend .env file not found at ../backend/.env"
+    echo "   Please create backend/.env from backend/.env.example"
+    exit 1
 fi
 
 # Build and start services

@@ -138,13 +138,8 @@ docker-build:
 	@echo "$(GREEN)✓ Docker images built$(NC)"
 
 ## docker-up: Start Docker Compose services
-docker-up:
+docker-up: docker-env-check
 	@echo "$(YELLOW)Starting Docker services...$(NC)"
-ifeq ($(DETECTED_OS),Windows)
-	copy config\.env.docker .env 2>nul || echo ""
-else
-	cp -n config/.env.docker .env 2>/dev/null || true
-endif
 	cd docker && docker-compose up -d
 	@echo "$(GREEN)✓ Services started$(NC)"
 	@echo "Backend: http://localhost:8000"
@@ -298,7 +293,7 @@ prod-build:
 	@echo "$(GREEN)✓ Production build complete$(NC)"
 
 ## prod-up: Start production services
-prod-up:
+prod-up: docker-env-check
 	@echo "$(YELLOW)Starting production services...$(NC)"
 	cd docker && docker-compose -f docker-compose.prod.yml up -d
 	@echo "$(GREEN)✓ Production services started$(NC)"
@@ -308,6 +303,26 @@ prod-down:
 	@echo "$(YELLOW)Stopping production services...$(NC)"
 	cd docker && docker-compose -f docker-compose.prod.yml down
 	@echo "$(GREEN)✓ Production services stopped$(NC)"
+
+## docker-env-check: Ensure Docker .env symlink exists
+docker-env-check:
+	@echo "$(YELLOW)Checking Docker .env symlink...$(NC)"
+ifeq ($(DETECTED_OS),Windows)
+	@if not exist docker\.env ( \
+		echo "Creating .env symlink..." && \
+		mklink docker\.env ..\backend\.env \
+	)
+else
+	@if [ ! -L docker/.env ]; then \
+		echo "Creating .env symlink..."; \
+		ln -sf ../backend/.env docker/.env; \
+	fi
+	@if [ ! -f backend/.env ]; then \
+		echo "$(RED)❌ Backend .env file missing. Run 'make setup' first$(NC)"; \
+		exit 1; \
+	fi
+endif
+	@echo "$(GREEN)✓ .env symlink ready$(NC)"
 
 ## version: Show version information
 version:
