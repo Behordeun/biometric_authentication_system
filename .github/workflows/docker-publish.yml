@@ -38,8 +38,7 @@ jobs:
   build-and-push-backend:
     name: Build and Push Backend
     runs-on: ubuntu-latest
-    needs: [check-tests]
-    if: always() && (needs.check-tests.result == 'success' || github.event_name != 'workflow_run')
+    if: github.event_name != 'workflow_run' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     permissions:
       contents: read
       packages: write
@@ -102,8 +101,7 @@ jobs:
   build-and-push-frontend:
     name: Build and Push Frontend
     runs-on: ubuntu-latest
-    needs: [check-tests]
-    if: always() && (needs.check-tests.result == 'success' || github.event_name != 'workflow_run')
+    if: github.event_name != 'workflow_run' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     permissions:
       contents: read
       packages: write
