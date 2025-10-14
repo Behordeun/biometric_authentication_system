@@ -2,7 +2,7 @@ name: Docker Build and Publish
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
     tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
@@ -10,7 +10,7 @@ on:
     workflows: ["CI/CD"]
     types:
       - completed
-    branches: [ main ]
+    branches: [ main, develop ]
 
 env:
   REGISTRY: ghcr.io
