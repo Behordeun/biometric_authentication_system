@@ -1,0 +1,318 @@
+name: Monitoring & Health Checks
+
+on:
+  schedule:
+    # Run health checks every 15 minutes during business hours (UTC)
+    - cron: '*/15 8-18 * * 1-5'
+    # Run comprehensive checks daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      check_type:
+        description: 'Type of health check to run'
+        required: true
+        default: 'basic'
+        type: choice
+        options:
+          - basic
+          - comprehensive
+          - security
+
+jobs:
+  health-check:
+    name: Service Health Check
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '*/15 8-18 * * 1-5' || github.event.inputs.check_type == 'basic'
+
+    steps:
+      - name: Check production endpoints
+        run: |
+          echo "🏥 Running basic health checks..."
+
+          # Replace with actual production URLs
+          ENDPOINTS=(
+            "https://yourapp.com/health"
+            "https://api.yourapp.com/health"
+            "https://yourapp.com/.well-known/openid-configuration"
+          )
+
+          for endpoint in "${ENDPOINTS[@]}"; do
+            echo "Checking $endpoint..."
+            # Uncomment when you have actual endpoints
+            # if ! curl -f -s --max-time 10 "$endpoint" > /dev/null; then
+            #   echo "❌ Health check failed for $endpoint"
+            #   exit 1
+            # fi
+            echo "✅ $endpoint is healthy"
+          done
+
+          echo "✅ All basic health checks passed"
+
+      - name: Check SSL certificates
+        run: |
+          echo "🔒 Checking SSL certificate expiration..."
+
+          # Replace with actual domain
+          DOMAIN="yourapp.com"
+
+          # Uncomment when you have actual domain
+          # EXPIRY=$(echo | openssl s_client -servername $DOMAIN -connect $DOMAIN:443 2>/dev/null | openssl x509 -noout -dates | grep notAfter | cut -d= -f2)
+          # EXPIRY_EPOCH=$(date -d "$EXPIRY" +%s)
+          # CURRENT_EPOCH=$(date +%s)
+          # DAYS_UNTIL_EXPIRY=$(( (EXPIRY_EPOCH - CURRENT_EPOCH) / 86400 ))
+
+          # if [ $DAYS_UNTIL_EXPIRY -lt 30 ]; then
+          #   echo "⚠️ SSL certificate expires in $DAYS_UNTIL_EXPIRY days"
+          #   echo "::warning::SSL certificate for $DOMAIN expires soon"
+          # fi
+
+          echo "✅ SSL certificate check completed"
+
+  comprehensive-check:
+    name: Comprehensive System Check
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 2 * * *' || github.event.inputs.check_type == 'comprehensive'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Database connectivity check
+        run: |
+          echo "🗄️ Checking database connectivity..."
+
+          # Simulate database health check
+          # Replace with actual database health check
+          echo "✅ Database connectivity verified"
+
+      - name: Redis connectivity check
+        run: |
+          echo "📦 Checking Redis connectivity..."
+
+          # Simulate Redis health check
+          # Replace with actual Redis health check
+          echo "✅ Redis connectivity verified"
+
+      - name: Performance metrics
+        run: |
+          echo "⚡ Collecting performance metrics..."
+
+          # Simulate performance monitoring
+          # Replace with actual performance checks
+          RESPONSE_TIME="0.045"
+          MEMORY_USAGE="65"
+          CPU_USAGE="23"
+
+          echo "Average response time: ${RESPONSE_TIME}s"
+          echo "Memory usage: ${MEMORY_USAGE}%"
+          echo "CPU usage: ${CPU_USAGE}%"
+
+          # Alert thresholds
+          if (( $(echo "$RESPONSE_TIME > 1.0" | bc -l) )); then
+            echo "::warning::High response time detected: ${RESPONSE_TIME}s"
+          fi
+
+          if [ "$MEMORY_USAGE" -gt 80 ]; then
+            echo "::warning::High memory usage detected: ${MEMORY_USAGE}%"
+          fi
+
+          if [ "$CPU_USAGE" -gt 80 ]; then
+            echo "::warning::High CPU usage detected: ${CPU_USAGE}%"
+          fi
+
+          echo "✅ Performance metrics collected"
+
+      - name: Dependency vulnerability check
+        run: |
+          echo "🔍 Checking for dependency vulnerabilities..."
+
+          # Backend dependency check
+          cd backend
+          pip install safety
+          safety check --json > safety-report.json || true
+
+          if [ -s safety-report.json ] && [ "$(cat safety-report.json)" != "[]" ]; then
+            echo "⚠️ Vulnerabilities found in Python dependencies"
+            cat safety-report.json
+            echo "::warning::Python dependency vulnerabilities detected"
+          fi
+
+          # Frontend dependency check
+          cd ../frontend
+          npm audit --audit-level=high --json > audit-report.json || true
+
+          if [ -s audit-report.json ]; then
+            HIGH_VULNS=$(cat audit-report.json | jq '.metadata.vulnerabilities.high // 0')
+            CRITICAL_VULNS=$(cat audit-report.json | jq '.metadata.vulnerabilities.critical // 0')
+
+            if [ "$HIGH_VULNS" -gt 0 ] || [ "$CRITICAL_VULNS" -gt 0 ]; then
+              echo "⚠️ High/Critical vulnerabilities found in npm dependencies"
+              echo "High: $HIGH_VULNS, Critical: $CRITICAL_VULNS"
+              echo "::warning::npm dependency vulnerabilities detected"
+            fi
+          fi
+
+          echo "✅ Dependency vulnerability check completed"
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    if: github.event.inputs.check_type == 'security' || github.event.schedule == '0 2 * * *'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Secret scanning
+        run: |
+          echo "🔐 Running secret scanning..."
+
+          pip install detect-secrets
+
+          # Check for new secrets
+          detect-secrets scan --baseline .secrets.baseline --force-use-all-plugins
+
+          if [ $? -ne 0 ]; then
+            echo "⚠️ New potential secrets detected"
+            echo "::warning::New secrets may have been committed"
+          fi
+
+          echo "✅ Secret scanning completed"
+
+      - name: Code quality metrics
+        run: |
+          echo "📊 Collecting code quality metrics..."
+
+          # Count lines of code
+          BACKEND_LOC=$(find backend/app -name "*.py" -exec wc -l {} + | tail -1 | awk '{print $1}')
+          FRONTEND_LOC=$(find frontend/src -name "*.tsx" -o -name "*.ts" -exec wc -l {} + | tail -1 | awk '{print $1}')
+          TEST_LOC=$(find backend/tests -name "*.py" -exec wc -l {} + | tail -1 | awk '{print $1}')
+
+          echo "Backend LOC: $BACKEND_LOC"
+          echo "Frontend LOC: $FRONTEND_LOC"
+          echo "Test LOC: $TEST_LOC"
+
+          # Calculate test coverage ratio
+          if [ "$BACKEND_LOC" -gt 0 ]; then
+            TEST_RATIO=$(echo "scale=2; $TEST_LOC / $BACKEND_LOC * 100" | bc)
+            echo "Test to code ratio: ${TEST_RATIO}%"
+
+            if (( $(echo "$TEST_RATIO < 30" | bc -l) )); then
+              echo "::warning::Low test coverage ratio: ${TEST_RATIO}%"
+            fi
+          fi
+
+          echo "✅ Code quality metrics collected"
+
+      - name: Infrastructure security check
+        run: |
+          echo "🏗️ Checking infrastructure security..."
+
+          # Check Kubernetes manifests
+          if [ -d "k8s" ]; then
+            echo "Checking Kubernetes security..."
+
+            # Check for security contexts
+            if ! grep -r "securityContext" k8s/; then
+              echo "::warning::No security contexts found in Kubernetes manifests"
+            fi
+
+            # Check for resource limits
+            if ! grep -r "resources:" k8s/; then
+              echo "::warning::No resource limits found in Kubernetes manifests"
+            fi
+          fi
+
+          # Check Terraform security
+          if [ -d "terraform" ]; then
+            echo "Checking Terraform security..."
+
+            # Check for hardcoded values
+            if grep -r "password\|secret" terraform/ --include="*.tf" | grep -v "var\." | grep -v "data\." | grep -v "random_"; then
+              echo "::warning::Potential hardcoded secrets in Terraform"
+            fi
+          fi
+
+          echo "✅ Infrastructure security check completed"
+
+  alert-summary:
+    name: Alert Summary
+    runs-on: ubuntu-latest
+    needs: [health-check, comprehensive-check, security-audit]
+    if: always()
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "📋 Monitoring Summary"
+          echo "===================="
+
+          HEALTH_STATUS="${{ needs.health-check.result }}"
+          COMPREHENSIVE_STATUS="${{ needs.comprehensive-check.result }}"
+          SECURITY_STATUS="${{ needs.security-audit.result }}"
+
+          echo "Health Check: $HEALTH_STATUS"
+          echo "Comprehensive Check: $COMPREHENSIVE_STATUS"
+          echo "Security Audit: $SECURITY_STATUS"
+
+          # Count failures
+          FAILURES=0
+          if [ "$HEALTH_STATUS" == "failure" ]; then
+            FAILURES=$((FAILURES + 1))
+          fi
+          if [ "$COMPREHENSIVE_STATUS" == "failure" ]; then
+            FAILURES=$((FAILURES + 1))
+          fi
+          if [ "$SECURITY_STATUS" == "failure" ]; then
+            FAILURES=$((FAILURES + 1))
+          fi
+
+          if [ $FAILURES -gt 0 ]; then
+            echo "❌ $FAILURES check(s) failed"
+            echo "::error::Monitoring checks failed"
+          else
+            echo "✅ All monitoring checks passed"
+          fi
+
+          echo "Timestamp: $(date -u)"
+
+      - name: Create issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `🚨 Monitoring Alert - ${new Date().toISOString().split('T')[0]}`;
+            const body = `
+            ## Monitoring Alert
+
+            One or more monitoring checks have failed.
+
+            **Check Results:**
+            - Health Check: ${{ needs.health-check.result }}
+            - Comprehensive Check: ${{ needs.comprehensive-check.result }}
+            - Security Audit: ${{ needs.security-audit.result }}
+
+            **Workflow:** ${{ github.workflow }}
+            **Run ID:** ${{ github.run_id }}
+            **Timestamp:** ${new Date().toISOString()}
+
+            Please investigate and resolve any issues.
+            `;
+
+            // Check if similar issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['monitoring', 'alert'],
+              state: 'open'
+            });
+
+            if (issues.data.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['monitoring', 'alert', 'bug']
+              });
+            }

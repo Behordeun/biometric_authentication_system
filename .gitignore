@@ -21,6 +21,7 @@ yarn-error.log*
 .pnp.js
 coverage/
 build/
+package-lock.json
 
 # Environment - NEVER commit these files
 .env
@@ -95,3 +96,4 @@ diagrams/*.md
 
 htmlcov
 .coverage
+package-lock.json

@@ -13,10 +13,16 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "react-scripts test --watchAll=false",
+    "test:watch": "react-scripts test",
+    "test:coverage": "react-scripts test --coverage --watchAll=false",
     "eject": "react-scripts eject"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^14.4.3",
+    "@types/jest": "^29.5.8",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "react-scripts": "5.0.1"
@@ -31,6 +37,25 @@
       "last 1 chrome version",
       "last 1 firefox version",
       "last 1 safari version"
+    ]
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/index.tsx",
+      "!src/react-app-env.d.ts",
+      "!src/setupTests.ts"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 65,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(axios|@simplewebauthn)/)"
     ]
   }
 }

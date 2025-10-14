@@ -102,7 +102,7 @@ dev-frontend:
 	cd frontend && npm start
 
 ## test: Run all tests with coverage
-test: test-coverage test-frontend
+test: test-coverage test-frontend-coverage
 	@echo "$(GREEN)✓ All tests passed$(NC)"
 
 ## test-backend: Run backend tests
@@ -132,8 +132,19 @@ test-fast:
 ## test-frontend: Run frontend tests
 test-frontend:
 	@echo "$(YELLOW)Running frontend tests...$(NC)"
-	cd frontend && npm test -- --watchAll=false
+	cd frontend && npm test
 	@echo "$(GREEN)✓ Frontend tests passed$(NC)"
+
+## test-frontend-coverage: Run frontend tests with coverage
+test-frontend-coverage:
+	@echo "$(YELLOW)Running frontend tests with coverage...$(NC)"
+	cd frontend && npm run test:coverage
+	@echo "$(GREEN)✓ Frontend coverage report generated$(NC)"
+
+## test-frontend-watch: Run frontend tests in watch mode
+test-frontend-watch:
+	@echo "$(YELLOW)Running frontend tests in watch mode...$(NC)"
+	cd frontend && npm run test:watch
 
 ## lint: Run linters
 lint:

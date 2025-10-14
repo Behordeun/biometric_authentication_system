@@ -32,11 +32,28 @@ jobs:
           # Calculate the merge base between HEAD and the base branch
           MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
           # Check for merge conflicts using git merge-tree
-          if ! git merge-tree $MERGE_BASE HEAD origin/${{ github.base_ref }} | grep -q "^changed in both"; then
-            echo "No merge conflicts detected"
+          CONFLICTS=$(git merge-tree $MERGE_BASE HEAD origin/${{ github.base_ref }} | grep "^changed in both" || true)
+          if [ -z "$CONFLICTS" ]; then
+            echo "✅ No merge conflicts detected"
           else
-            echo "Merge conflicts detected"
+            echo "❌ Merge conflicts detected:"
+            echo "$CONFLICTS"
             exit 1
+          fi
+
+      - name: Check security files
+        run: |
+          echo "🔒 Checking security-sensitive files..."
+
+          # Check for changes to security-sensitive files
+          SECURITY_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '\.(env|key|pem|p12|pfx|jks)$|secrets|credentials' || true)
+
+          if [ -n "$SECURITY_FILES" ]; then
+            echo "⚠️ Security-sensitive files changed:"
+            echo "$SECURITY_FILES"
+            echo "::warning::Security-sensitive files detected. Ensure no secrets are committed."
+          else
+            echo "✅ No security-sensitive files changed"
           fi
 
   size-check:
@@ -58,13 +75,50 @@ jobs:
             CHANGED_LINES=$(echo "$DIFF_STAT" | awk '{if ($4 ~ /^[0-9]+$/ && $6 ~ /^[0-9]+$/) print $4+$6; else print 0}')
           fi
 
-          echo "Changed files: $CHANGED_FILES"
-          echo "Changed lines: $CHANGED_LINES"
+          echo "📊 PR Metrics:"
+          echo "  Changed files: $CHANGED_FILES"
+          echo "  Changed lines: $CHANGED_LINES"
 
           if [ "$CHANGED_FILES" -gt 50 ]; then
-            echo "::warning::PR changes more than 50 files. Consider splitting into smaller PRs."
+            echo "::warning::PR changes more than 50 files ($CHANGED_FILES). Consider splitting into smaller PRs."
           fi
 
           if [ "$CHANGED_LINES" -gt 1000 ]; then
-            echo "::warning::PR changes more than 1000 lines. Consider splitting into smaller PRs."
+            echo "::warning::PR changes more than 1000 lines ($CHANGED_LINES). Consider splitting into smaller PRs."
           fi
+
+  test-validation:
+    name: Test Validation
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.changed_files, 'backend/') || contains(github.event.pull_request.changed_files, 'frontend/')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for test files
+        run: |
+          echo "🧪 Checking for test coverage..."
+
+          # Check if backend changes include tests
+          BACKEND_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '^backend/' | grep -v '__pycache__' | wc -l)
+          BACKEND_TESTS=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '^backend/tests/' | wc -l)
+
+          # Check if frontend changes include tests
+          FRONTEND_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '^frontend/src/' | wc -l)
+          FRONTEND_TESTS=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '\.test\.' | wc -l)
+
+          echo "Backend files changed: $BACKEND_CHANGED"
+          echo "Backend test files changed: $BACKEND_TESTS"
+          echo "Frontend files changed: $FRONTEND_CHANGED"
+          echo "Frontend test files changed: $FRONTEND_TESTS"
+
+          # Warn if significant changes without tests
+          if [ "$BACKEND_CHANGED" -gt 3 ] && [ "$BACKEND_TESTS" -eq 0 ]; then
+            echo "::warning::Backend changes detected without test updates. Consider adding tests."
+          fi
+
+          if [ "$FRONTEND_CHANGED" -gt 2 ] && [ "$FRONTEND_TESTS" -eq 0 ]; then
+            echo "::warning::Frontend changes detected without test updates. Consider adding tests."
+          fi
+
+          echo "✅ Test validation completed"

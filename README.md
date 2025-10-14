@@ -1,5 +1,12 @@
 # Hybrid Passwordless Authentication System
 
+[![CI/CD](https://github.com/your-username/biometric_authentication_system/workflows/CI%2FCD/badge.svg)](https://github.com/your-username/biometric_authentication_system/actions/workflows/ci-cd.yml)
+[![Docker Build](https://github.com/your-username/biometric_authentication_system/workflows/Docker%20Build%20and%20Publish/badge.svg)](https://github.com/your-username/biometric_authentication_system/actions/workflows/docker-publish.yml)
+[![Security](https://github.com/your-username/biometric_authentication_system/workflows/Monitoring%20%26%20Health%20Checks/badge.svg)](https://github.com/your-username/biometric_authentication_system/actions/workflows/monitoring.yml)
+[![Coverage](https://img.shields.io/badge/Backend%20Coverage-90%25-brightgreen)](https://github.com/your-username/biometric_authentication_system/actions)
+[![Frontend Coverage](https://img.shields.io/badge/Frontend%20Coverage-84%25-brightgreen)](https://github.com/your-username/biometric_authentication_system/actions)
+[![Tests](https://img.shields.io/badge/Tests-150%20Passing-brightgreen)](https://github.com/your-username/biometric_authentication_system/actions)
+
 A modern, enterprise-grade authentication system combining OAuth2, OpenID Connect, and WebAuthn (FIDO2) for passwordless biometric authentication.
 
 ## Features
@@ -32,6 +39,8 @@ See [REFACTORING.md](docs/REFACTORING.md) for detailed structure.
 
 ## 📋 Documentation
 
+- [CI/CD_PIPELINE.md](docs/CI_CD_PIPELINE.md) - **CI/CD pipeline & testing strategy**
+- [GITHUB_SECRETS.md](docs/GITHUB_SECRETS.md) - **GitHub secrets configuration**
 - [CHANGELOG.md](CHANGELOG.md) - Version history and fixes
 - [BIOMETRIC_SECURITY.md](docs/BIOMETRIC_SECURITY.md) - Anti-spoofing & biometric security
 - [SECURITY_FIXES.md](docs/SECURITY_FIXES.md) - Security improvements
@@ -188,8 +197,11 @@ See [SECURITY.md](docs/SECURITY.md) for detailed secrets management.
 # Validate environment
 ./scripts/validate-env.sh
 
-# Run tests with coverage
-cd backend && pytest --cov=app --cov-report=term
+# Run comprehensive tests (134 backend + 16 frontend)
+make test
+
+# Run tests with coverage (90% backend, 84% frontend)
+make test-coverage
 
 # Database migrations
 cd backend && alembic upgrade head
@@ -204,13 +216,28 @@ make security-scan
 cd backend && mypy app/
 ```
 
+### CI/CD Pipeline
+
+The project uses a comprehensive CI/CD pipeline with:
+- **150 automated tests** (134 backend + 16 frontend)
+- **90% backend coverage** requirement
+- **84% frontend coverage** achieved
+- **Security scanning** with Trivy, Gitleaks, detect-secrets
+- **Quality gates** with automated PR validation
+- **Monitoring** with health checks and alerting
+
+See [CI/CD_PIPELINE.md](docs/CI_CD_PIPELINE.md) for detailed pipeline documentation.
+
 ### Code Quality Standards
 
 - **SQLAlchemy 2.0**: Modern ORM with type safety
 - **Type annotations**: Full type coverage with mypy
 - **Error handling**: Comprehensive exception management
 - **Logging**: Structured logging with security considerations
-- **Testing**: 90%+ test coverage requirement
+- **Testing**: 90%+ backend coverage, 80%+ frontend coverage requirements
+- **CI/CD**: Automated quality gates with 150 tests
+- **Security**: Multi-layer scanning and validation
+- **Monitoring**: Continuous health checks and performance tracking
 
 ## Production Deployment
 

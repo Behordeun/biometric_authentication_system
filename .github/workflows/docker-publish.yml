@@ -6,19 +6,44 @@ on:
     tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
+  workflow_run:
+    workflows: ["CI/CD"]
+    types:
+      - completed
+    branches: [ main ]
 
 env:
   REGISTRY: ghcr.io
   BACKEND_IMAGE_NAME: ${{ github.repository }}/auth-backend
   FRONTEND_IMAGE_NAME: ${{ github.repository }}/auth-frontend
+  # Security scanning configuration
+  TRIVY_SEVERITY: HIGH,CRITICAL
+  TRIVY_EXIT_CODE: 1
 
 jobs:
+  check-tests:
+    name: Verify Tests Passed
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_run'
+
+    steps:
+      - name: Check workflow conclusion
+        run: |
+          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+            echo "❌ CI/CD workflow failed, skipping Docker build"
+            exit 1
+          fi
+          echo "✅ CI/CD workflow passed, proceeding with Docker build"
+
   build-and-push-backend:
     name: Build and Push Backend
     runs-on: ubuntu-latest
+    needs: [check-tests]
+    if: always() && (needs.check-tests.result == 'success' || github.event_name != 'workflow_run')
     permissions:
       contents: read
       packages: write
+      security-events: write
 
     steps:
       - uses: actions/checkout@v4
@@ -48,6 +73,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: ./backend
@@ -58,12 +84,30 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Run Trivy vulnerability scanner
+        if: github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          format: 'sarif'
+          output: 'trivy-backend-results.sarif'
+
+      - name: Upload Trivy scan results
+        if: github.event_name != 'pull_request'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-backend-results.sarif'
+          category: 'backend-image'
+
   build-and-push-frontend:
     name: Build and Push Frontend
     runs-on: ubuntu-latest
+    needs: [check-tests]
+    if: always() && (needs.check-tests.result == 'success' || github.event_name != 'workflow_run')
     permissions:
       contents: read
       packages: write
+      security-events: write
 
     steps:
       - uses: actions/checkout@v4
@@ -93,12 +137,48 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
-          file: ./frontend/Dockerfile
+          file: ./frontend/Dockerfile.dev
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Run Trivy vulnerability scanner
+        if: github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          format: 'sarif'
+          output: 'trivy-frontend-results.sarif'
+
+      - name: Upload Trivy scan results
+        if: github.event_name != 'pull_request'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-frontend-results.sarif'
+          category: 'frontend-image'
+
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [build-and-push-backend, build-and-push-frontend]
+    if: always() && github.event_name != 'pull_request'
+
+    steps:
+      - name: Security scan summary
+        run: |
+          echo "🛡️ Docker Security Scan Summary"
+          echo "Backend build: ${{ needs.build-and-push-backend.result }}"
+          echo "Frontend build: ${{ needs.build-and-push-frontend.result }}"
+
+          if [ "${{ needs.build-and-push-backend.result }}" != "success" ] || [ "${{ needs.build-and-push-frontend.result }}" != "success" ]; then
+            echo "❌ One or more builds failed"
+            exit 1
+          fi
+
+          echo "✅ All Docker images built and scanned successfully"

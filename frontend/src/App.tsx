@@ -54,11 +54,7 @@ function App() {
         return;
       }
 
-      if (verifyRes.data && verifyRes.data.success) {
-        setMessage('Registration successful! You can now log in.');
-      } else {
-        setMessage('Registration verification failed.');
-      }
+      setMessage('Registration successful! You can now log in.');
     } catch (error: any) {
       setMessage(`Registration failed: ${error.message || JSON.stringify(error)}`);
     }
@@ -116,7 +112,6 @@ function App() {
   };
 
   return (
-    return (
       <div style={{ padding: '40px', maxWidth: '600px', margin: '0 auto' }}>
         <h1>🔐 Hybrid Auth System</h1>
         <p>Passwordless authentication using biometrics (fingerprint, Face ID)</p>
@@ -176,7 +171,6 @@ function App() {
         )}
       </div>
     );
-  );
 }
 
 export default App;

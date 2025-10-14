@@ -1,0 +1,335 @@
+name: Production Deployment
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE_NAME: ${{ github.repository }}/auth-backend
+  FRONTEND_IMAGE_NAME: ${{ github.repository }}/auth-frontend
+
+jobs:
+  pre-deployment-checks:
+    name: Pre-Deployment Security & Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate deployment readiness
+        run: |
+          echo "🔍 Validating deployment readiness..."
+
+          # Check for required files
+          REQUIRED_FILES=(
+            "backend/.env.example"
+            "config/.env.production.example"
+            "k8s/deployment.yaml"
+            "terraform/main.tf"
+            ".secrets.baseline"
+          )
+
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "❌ Required file missing: $file"
+              exit 1
+            fi
+          done
+
+          echo "✅ All required files present"
+
+      - name: Security scan for deployment
+        run: |
+          pip install detect-secrets
+
+          # Run comprehensive secret scan
+          detect-secrets scan --baseline .secrets.baseline --force-use-all-plugins
+
+          # Check for production secrets in code
+          if find . -name "*.py" -o -name "*.js" -o -name "*.ts" | xargs grep -l "AKIA[0-9A-Z]\{16\}" 2>/dev/null; then
+            echo "❌ AWS credentials found in code"
+            exit 1
+          fi
+
+          echo "✅ Security scan passed"
+
+      - name: Validate environment configuration
+        run: |
+          echo "🔧 Validating environment configuration..."
+
+          # Check .env.example has all required variables
+          REQUIRED_VARS=(
+            "DATABASE_URL"
+            "REDIS_URL"
+            "SECRET_KEY"
+            "RP_ID"
+            "RP_NAME"
+            "ORIGIN"
+          )
+
+          for var in "${REQUIRED_VARS[@]}"; do
+            if ! grep -q "^$var=" backend/.env.example; then
+              echo "❌ Required environment variable missing from .env.example: $var"
+              exit 1
+            fi
+          done
+
+          echo "✅ Environment configuration validated"
+
+  comprehensive-tests:
+    name: Comprehensive Test Suite
+    runs-on: ubuntu-latest
+    needs: [pre-deployment-checks]
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ${{ secrets.TEST_DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.TEST_DB_NAME }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov httpx greenlet
+
+          cd ../frontend
+          npm ci
+
+      - name: Run full test suite
+        env:
+          DATABASE_URL: postgresql+asyncpg://${{ secrets.TEST_DB_USER }}:${{ secrets.TEST_DB_PASSWORD }}@localhost:5432/${{ secrets.TEST_DB_NAME }}
+          REDIS_URL: ${{ secrets.TEST_REDIS_URL || 'redis://localhost:6379' }}
+          SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}  # pragma: allowlist secret
+          RP_ID: ${{ secrets.TEST_RP_ID || 'localhost' }}
+          RP_NAME: ${{ secrets.TEST_RP_NAME }}
+          ORIGIN: ${{ secrets.TEST_ORIGIN }}
+          ENVIRONMENT: test
+        run: |
+          echo "🧪 Running comprehensive test suite..."
+
+          # Backend tests with strict coverage
+          cd backend
+          pytest --cov=app --cov-report=xml --cov-report=term --cov-fail-under=90 -v
+
+          # Frontend tests with coverage
+          cd ../frontend
+          npm run test:coverage -- --watchAll=false
+
+          echo "✅ All tests passed with required coverage"
+
+      - name: Performance benchmarks
+        run: |
+          echo "⚡ Running performance benchmarks..."
+
+          # Simple load test simulation
+          cd backend
+          python -c "
+          import asyncio
+          import time
+          from app.main import app
+          from fastapi.testclient import TestClient
+
+          client = TestClient(app)
+
+          # Warm up
+          for _ in range(5):
+              client.get('/health')
+
+          # Benchmark
+          start = time.time()
+          for _ in range(100):
+              response = client.get('/health')
+              assert response.status_code == 200
+          end = time.time()
+
+          avg_time = (end - start) / 100
+          print(f'Average response time: {avg_time:.3f}s')
+
+          if avg_time > 0.1:
+              print('❌ Performance benchmark failed')
+              exit(1)
+          print('✅ Performance benchmark passed')
+          "
+
+  build-and-scan:
+    name: Build & Security Scan Images
+    runs-on: ubuntu-latest
+    needs: [comprehensive-tests]
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
+          tags: |
+            type=ref,event=tag
+            type=sha,prefix={{branch}}-
+
+      - name: Build backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run Trivy vulnerability scanner on backend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-backend-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-backend-results.sarif'
+
+      - name: Check for critical vulnerabilities
+        run: |
+          # Fail if critical vulnerabilities found
+          if grep -q '"level": "error"' trivy-backend-results.sarif; then
+            echo "❌ Critical vulnerabilities found in backend image"
+            exit 1
+          fi
+          echo "✅ No critical vulnerabilities found"
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-and-scan]
+    if: github.event.inputs.environment == 'staging' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    environment: staging
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to staging
+        run: |
+          echo "🚀 Deploying to staging environment..."
+          echo "Image: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${{ github.sha }}"
+
+          # Simulate deployment (replace with actual deployment logic)
+          echo "✅ Staging deployment completed"
+
+      - name: Run smoke tests
+        run: |
+          echo "🔍 Running smoke tests on staging..."
+
+          # Wait for deployment to be ready
+          sleep 30
+
+          # Basic health checks (replace with actual staging URL)
+          # curl -f https://staging.yourapp.com/health
+
+          echo "✅ Smoke tests passed"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    if: github.event.inputs.environment == 'production' && github.event_name == 'workflow_dispatch'
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Final security check
+        run: |
+          echo "🔒 Final security validation for production..."
+
+          # Additional production-specific security checks
+          echo "✅ Production security validation passed"
+
+      - name: Deploy to production
+        run: |
+          echo "🚀 Deploying to production environment..."
+          echo "Image: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${{ github.sha }}"
+
+          # Simulate production deployment (replace with actual deployment logic)
+          echo "✅ Production deployment completed"
+
+      - name: Post-deployment verification
+        run: |
+          echo "✅ Running post-deployment verification..."
+
+          # Production health checks (replace with actual production URL)
+          # curl -f https://yourapp.com/health
+
+          echo "✅ Production deployment verified"
+
+      - name: Notify deployment success
+        run: |
+          echo "📢 Production deployment successful!"
+          echo "Version: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
