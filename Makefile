@@ -101,15 +101,33 @@ dev-frontend:
 	@echo "$(YELLOW)Starting frontend server...$(NC)"
 	cd frontend && npm start
 
-## test: Run all tests
-test: test-backend test-frontend
+## test: Run all tests with coverage
+test: test-coverage test-frontend
 	@echo "$(GREEN)✓ All tests passed$(NC)"
 
 ## test-backend: Run backend tests
 test-backend:
 	@echo "$(YELLOW)Running backend tests...$(NC)"
-	cd backend && $(ACTIVATE) && pytest -v
+	cd backend && uv run pytest -v
 	@echo "$(GREEN)✓ Backend tests passed$(NC)"
+
+## test-coverage: Run tests with coverage report
+test-coverage:
+	@echo "$(YELLOW)Running tests with coverage...$(NC)"
+	cd backend && uv run pytest --cov=app --cov-report=term --cov-report=html
+	@echo "$(GREEN)✓ Coverage report generated$(NC)"
+	@echo "HTML report: backend/htmlcov/index.html"
+
+## test-watch: Run tests in watch mode
+test-watch:
+	@echo "$(YELLOW)Running tests in watch mode...$(NC)"
+	cd backend && uv run pytest-watch -- --cov=app
+
+## test-fast: Run tests without coverage
+test-fast:
+	@echo "$(YELLOW)Running fast tests...$(NC)"
+	cd backend && uv run pytest -x --tb=short
+	@echo "$(GREEN)✓ Fast tests complete$(NC)"
 
 ## test-frontend: Run frontend tests
 test-frontend:
