@@ -6,6 +6,9 @@ repos:
     rev: v4.5.0
     hooks:
       - id: check-added-large-files
+        # Allow files up to 1024 KB (1 MB). The frontend/package-lock.json is
+        # ~765 KB and was being blocked by the 500 KB default.
+        args: ['--maxkb=1024']
       - id: check-yaml
         args: ['--allow-multiple-documents']
       - id: end-of-file-fixer
@@ -18,6 +21,11 @@ repos:
       - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
         exclude: package.lock.json|.secrets.baseline
+
+# Alternative: if you'd rather keep the strict file-size limit and just
+# exclude the lockfile from the check, change the `check-added-large-files`
+# hook above to include an `exclude: frontend/package-lock.json` entry instead
+# of raising `--maxkb`.
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.18.1

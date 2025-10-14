@@ -5,8 +5,16 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install --omit=dev
+# Install dependencies (include devDependencies required for build)
+# Use `npm ci` when a lockfile is present for reproducible installs; fall back
+# to `npm install` otherwise. We intentionally install devDependencies in the
+# build stage so build tools like `react-scripts` are present, then copy only
+# the compiled output to the lightweight nginx image.
+RUN if [ -f package-lock.json ]; then \
+      npm ci; \
+    else \
+      npm install; \
+    fi
 
 # Copy source code
 COPY . .
