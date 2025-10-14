@@ -1,7 +1,7 @@
 import base64
 from datetime import datetime, timedelta, timezone
 
-import aioredis as redis
+import redis.asyncio as redis
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -82,8 +82,10 @@ async def registration_options(
             "timestamp": datetime.now().isoformat(),
         }
 
+        import json
+
         await redis_client.setex(
-            f"reg_challenge:{request.email}", 300, str(challenge_data)
+            f"reg_challenge:{request.email}", 300, json.dumps(challenge_data)
         )
 
         await SecurityService.log_security_event(
@@ -126,9 +128,12 @@ async def registration_verify(
         raise HTTPException(status_code=400, detail="Challenge expired")
 
     try:
-        # Parse challenge data (simplified - use JSON in production)
-        challenge_b64 = eval(challenge_data_str)["challenge"]
-        stored_fingerprint = eval(challenge_data_str)["device_fingerprint"]
+        import json
+
+        # Parse challenge data
+        challenge_data = json.loads(challenge_data_str)
+        challenge_b64 = challenge_data["challenge"]
+        stored_fingerprint = challenge_data["device_fingerprint"]
 
         # Validate device consistency
         current_fingerprint = SecurityService.generate_device_fingerprint(
@@ -180,10 +185,11 @@ async def registration_verify(
             raise HTTPException(status_code=400, detail="Security validation failed")
 
         # Create user
+        username = request.email.split("@")[0]  # Generate username from email
         user = User(
             email=request.email,
-            username=request.username or request.email.split("@")[0],
-            display_name=request.username or request.email.split("@")[0],
+            username=username,
+            display_name=username,
             is_active=True,
             is_verified=True,
         )
@@ -249,7 +255,10 @@ async def registration_verify(
             "ERROR",
         )
         logger.error(f"Registration verification failed: {e}")
-        raise HTTPException(status_code=400, detail="Registration failed")
+        import traceback
+
+        logger.error(f"Full traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=400, detail=f"Registration failed: {str(e)}")
 
 
 @router.post("/login/options")
@@ -335,8 +344,10 @@ async def login_options(
             "user_id": str(user.id),
         }
 
+        import json
+
         await redis_client.setex(
-            f"auth_challenge:{request.email}", 300, str(challenge_data)
+            f"auth_challenge:{request.email}", 300, json.dumps(challenge_data)
         )
 
         await SecurityService.log_security_event(
@@ -389,7 +400,9 @@ async def login_verify(
 
     try:
         # Parse challenge data
-        challenge_data = eval(challenge_data_str)
+        import json
+
+        challenge_data = json.loads(challenge_data_str)
         challenge_b64 = challenge_data["challenge"]
         stored_fingerprint = challenge_data["device_fingerprint"]
         stored_user_id = challenge_data["user_id"]
@@ -512,4 +525,7 @@ async def login_verify(
             "ERROR",
         )
         logger.error(f"Authentication verification failed: {e}")
-        raise HTTPException(status_code=400, detail="Authentication failed")
+        import traceback
+
+        logger.error(f"Full traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")

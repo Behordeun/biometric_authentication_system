@@ -11,7 +11,7 @@ async def test_root():
     async with AsyncClient(app=app, base_url="http://test") as client:
         response = await client.get("/")
         assert response.status_code == 200
-        assert "Hybrid Authentication System" in response.json()["message"]
+        assert "Hybrid Passwordless Authentication System" in response.json()["message"]
 
 
 @pytest.mark.asyncio

@@ -89,8 +89,6 @@ class WebAuthnService:
             # Strong cryptographic algorithms only
             supported_pub_key_algs=[
                 COSEAlgorithmIdentifier.ECDSA_SHA_256,
-                COSEAlgorithmIdentifier.ECDSA_SHA_384,
-                COSEAlgorithmIdentifier.ECDSA_SHA_512,
                 COSEAlgorithmIdentifier.RSASSA_PSS_SHA_256,
                 COSEAlgorithmIdentifier.RSASSA_PSS_SHA_384,
                 COSEAlgorithmIdentifier.RSASSA_PSS_SHA_512,

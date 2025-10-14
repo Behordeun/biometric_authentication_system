@@ -14,6 +14,8 @@ from app.services.security_service import SecurityService
 
 logger = get_logger(__name__)
 
+AUTH_PATH_PREFIX = "/auth/"
+
 
 class SecurityMiddleware(BaseHTTPMiddleware):
     """Enhanced security middleware with anti-spoofing protection"""
@@ -85,8 +87,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
     async def _check_global_rate_limit(self, request: Request):
         """Global rate limiting per IP"""
         client_ip = request.client.host
-
-        # Allow higher limits for authentication endpoints
+        if request.url.path.startswith(AUTH_PATH_PREFIX):
+            return  # Handled by endpoint-specific rate limiting
         if request.url.path.startswith("/auth/"):
             return  # Handled by endpoint-specific rate limiting
 
@@ -132,8 +134,7 @@ class BiometricSecurityMiddleware(BaseHTTPMiddleware):
     """Specialized middleware for biometric endpoint security"""
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        # Only apply to biometric authentication endpoints
-        if not request.url.path.startswith("/auth/"):
+        if not request.url.path.startswith(AUTH_PATH_PREFIX):
             return await call_next(request)
 
         try:
@@ -190,8 +191,7 @@ class AntiReplayMiddleware(BaseHTTPMiddleware):
         self._last_cleanup = time.time()
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        # Only apply to sensitive endpoints
-        if request.method == "POST" and request.url.path.startswith("/auth/"):
+        if request.method == "POST" and request.url.path.startswith(AUTH_PATH_PREFIX):
             await self._check_replay_protection(request)
 
         return await call_next(request)
