@@ -32,4 +32,4 @@ python-dotenv==1.0.0
 # Code Formatting & Linting
 autoflake==2.2.1
 black==24.4.2
-isort==5.13.3
+isort==5.13.2
