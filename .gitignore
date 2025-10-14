@@ -96,4 +96,3 @@ diagrams/*.md
 
 htmlcov
 .coverage
-package-lock.json
