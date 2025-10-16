@@ -34,7 +34,8 @@ describe('App Component', () => {
 
   test('renders login form', () => {
     render(<App />);
-    expect(screen.getAllByPlaceholderText('Email')).toHaveLength(2);
+    expect(screen.getByPlaceholderText('Email')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Email or Username')).toBeInTheDocument();
     expect(screen.getByText('Login with Biometric')).toBeInTheDocument();
   });
 
@@ -54,7 +55,7 @@ describe('App Component', () => {
     fireEvent.click(screen.getByText('Login with Biometric'));
 
     await waitFor(() => {
-      expect(screen.getByText('Please enter your email')).toBeInTheDocument();
+      expect(screen.getByText('Please enter your email or username')).toBeInTheDocument();
     });
   });
 

@@ -5,7 +5,7 @@ import { API_URL } from './config';
 
 function App() {
   const [registerEmail, setRegisterEmail] = useState('');
-  const [loginEmail, setLoginEmail] = useState('');
+  const [loginIdentifier, setLoginIdentifier] = useState('');
   const [username, setUsername] = useState('');
   const [message, setMessage] = useState('');
   const [token, setToken] = useState('');
@@ -62,8 +62,8 @@ function App() {
 
   const handleLogin = async () => {
     try {
-      if (!loginEmail) {
-        setMessage('Please enter your email');
+      if (!loginIdentifier) {
+        setMessage('Please enter your email or username');
         return;
       }
 
@@ -73,7 +73,7 @@ function App() {
         return;
       }
       const optionsRes = await axios.post(`${API_URL}/auth/login/options`, {
-        email: loginEmail
+        identifier: loginIdentifier
       });
 
       const credential = await startAuthentication(optionsRes.data);
@@ -84,7 +84,7 @@ function App() {
         return;
       }
       const verifyRes = await axios.post(`${API_URL}/auth/login/verify`, {
-        email: loginEmail,
+        identifier: loginIdentifier,
         credential
       });
 
@@ -140,10 +140,10 @@ function App() {
         <div style={{ marginBottom: '20px' }}>
           <h2>Login</h2>
           <input
-            type="email"
-            placeholder="Email"
-            value={loginEmail}
-            onChange={(e) => setLoginEmail(e.target.value)}
+            type="text"
+            placeholder="Email or Username"
+            value={loginIdentifier}
+            onChange={(e) => setLoginIdentifier(e.target.value)}
             style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
           />
           <button onClick={handleLogin} style={{ padding: '10px 20px' }}>

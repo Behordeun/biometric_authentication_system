@@ -44,11 +44,11 @@ class RegistrationVerification(BaseModel):
 
 
 class LoginOptionsRequest(BaseModel):
-    email: EmailStr
+    identifier: str  # Can be email or username
 
 
 class LoginVerification(BaseModel):
-    email: EmailStr
+    identifier: str  # Can be email or username
     credential: dict
 
 

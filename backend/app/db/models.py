@@ -36,6 +36,14 @@ class User(Base):
     )
     oauth_clients = relationship("OAuthClient", back_populates="owner")
 
+    @classmethod
+    def find_by_identifier(cls, db, identifier: str):
+        """Find user by email or username"""
+        from sqlalchemy import or_
+        return db.query(cls).filter(
+            or_(cls.email == identifier, cls.username == identifier)
+        ).first()
+
 
 class WebAuthnCredential(Base):
     __tablename__ = "webauthn_credentials"

@@ -277,14 +277,19 @@ async def login_options(
             None,
             client_ip,
             user_agent,
-            {"email": request.email},
+            {"identifier": request.identifier},
             db,
             "WARNING",
         )
         raise HTTPException(status_code=429, detail="Too many authentication attempts")
 
-    # Find user
-    result = await db.execute(select(User).where(User.email == request.email))
+    # Find user by email or username
+    from sqlalchemy import or_
+    result = await db.execute(
+        select(User).where(
+            or_(User.email == request.identifier, User.username == request.identifier)
+        )
+    )
     user = result.scalar_one_or_none()
     if not user:
         await SecurityService.log_security_event(
@@ -292,7 +297,7 @@ async def login_options(
             None,
             client_ip,
             user_agent,
-            {"email": request.email},
+            {"identifier": request.identifier},
             db,
             "WARNING",
         )
@@ -305,7 +310,7 @@ async def login_options(
             str(user.id),
             client_ip,
             user_agent,
-            {"email": request.email},
+            {"identifier": request.identifier, "email": user.email},
             db,
             "ERROR",
         )
@@ -347,7 +352,7 @@ async def login_options(
         import json
 
         await redis_client.setex(
-            f"auth_challenge:{request.email}", 300, json.dumps(challenge_data)
+            f"auth_challenge:{user.email}", 300, json.dumps(challenge_data)
         )
 
         await SecurityService.log_security_event(
@@ -355,7 +360,7 @@ async def login_options(
             str(user.id),
             client_ip,
             user_agent,
-            {"email": request.email, "suspicious_count": len(suspicious_activities)},
+            {"identifier": request.identifier, "email": user.email, "suspicious_count": len(suspicious_activities)},
             db,
         )
 
@@ -384,15 +389,26 @@ async def login_verify(
     client_ip = http_request.client.host
     user_agent = http_request.headers.get("user-agent", "")
 
+    # Find user first to get email for challenge lookup
+    from sqlalchemy import or_
+    result = await db.execute(
+        select(User).where(
+            or_(User.email == request.identifier, User.username == request.identifier)
+        )
+    )
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
     # Retrieve and validate challenge data
-    challenge_data_str = await redis_client.get(f"auth_challenge:{request.email}")
+    challenge_data_str = await redis_client.get(f"auth_challenge:{user.email}")
     if not challenge_data_str:
         await SecurityService.log_security_event(
             "AUTH_CHALLENGE_EXPIRED",
             None,
             client_ip,
             user_agent,
-            {"email": request.email},
+            {"identifier": request.identifier, "email": user.email},
             db,
             "WARNING",
         )
@@ -407,16 +423,14 @@ async def login_verify(
         stored_fingerprint = challenge_data["device_fingerprint"]
         stored_user_id = challenge_data["user_id"]
 
-        # Find user
-        result = await db.execute(select(User).where(User.email == request.email))
-        user = result.scalar_one_or_none()
-        if not user or str(user.id) != stored_user_id:
+        # Validate user matches stored challenge
+        if str(user.id) != stored_user_id:
             await SecurityService.log_security_event(
                 "AUTH_USER_MISMATCH",
                 stored_user_id,
                 client_ip,
                 user_agent,
-                {"email": request.email},
+                {"identifier": request.identifier, "email": user.email},
                 db,
                 "ERROR",
             )
@@ -495,7 +509,7 @@ async def login_verify(
         await db.commit()
 
         # Clean up challenge
-        await redis_client.delete(f"auth_challenge:{request.email}")
+        await redis_client.delete(f"auth_challenge:{user.email}")
 
         await SecurityService.log_security_event(
             "AUTHENTICATION_SUCCESS",
