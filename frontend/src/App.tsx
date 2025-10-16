@@ -17,8 +17,8 @@ function App() {
         return;
       }
 
-      // Ensure API_URL uses HTTPS
-      if (!API_URL.startsWith('https://')) {
+      // Ensure API_URL uses HTTPS in production
+      if (!API_URL.startsWith('https://') && process.env.NODE_ENV === 'production') {
         setMessage('Insecure connection detected. Please use HTTPS for all API requests.');
         return;
       }
@@ -67,8 +67,8 @@ function App() {
         return;
       }
 
-      // Ensure API_URL uses HTTPS
-      if (!API_URL.startsWith('https://')) {
+      // Ensure API_URL uses HTTPS in production
+      if (!API_URL.startsWith('https://') && process.env.NODE_ENV === 'production') {
         setMessage('Insecure connection detected. Please use HTTPS for all API requests.');
         return;
       }
@@ -78,8 +78,8 @@ function App() {
 
       const credential = await startAuthentication(optionsRes.data);
 
-      // Ensure API_URL uses HTTPS before sending sensitive information
-      if (!API_URL.startsWith('https://')) {
+      // Ensure API_URL uses HTTPS in production before sending sensitive information
+      if (!API_URL.startsWith('https://') && process.env.NODE_ENV === 'production') {
         setMessage('Insecure connection detected. Please use HTTPS for all API requests.');
         return;
       }
@@ -98,7 +98,7 @@ function App() {
 
   const getUserInfo = async () => {
     try {
-      if (!API_URL.startsWith('https://')) {
+      if (!API_URL.startsWith('https://') && process.env.NODE_ENV === 'production') {
         setMessage('Insecure connection detected. Please use HTTPS for all API requests.');
         return;
       }

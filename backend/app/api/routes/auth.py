@@ -213,7 +213,7 @@ async def registration_verify(
         session = DBSession(
             user_id=user.id,
             refresh_token=refresh_token,
-            expires_at=datetime.now(timezone.utc)
+            expires_at=datetime.now()
             + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
             ip_address=client_ip,
             user_agent=user_agent,
@@ -372,7 +372,7 @@ async def login_options(
             str(user.id),
             client_ip,
             user_agent,
-            {"email": request.email, "error": str(e)},
+            {"identifier": request.identifier, "email": user.email, "error": str(e)},
             db,
             "ERROR",
         )
@@ -447,7 +447,7 @@ async def login_verify(
                 str(user.id),
                 client_ip,
                 user_agent,
-                {"email": request.email},
+                {"identifier": request.identifier, "email": user.email},
                 db,
                 "ERROR",
             )
@@ -464,7 +464,7 @@ async def login_verify(
                 str(user.id),
                 client_ip,
                 user_agent,
-                {"email": request.email},
+                {"identifier": request.identifier, "email": user.email},
                 db,
                 "ERROR",
             )
@@ -477,7 +477,7 @@ async def login_verify(
                 str(user.id),
                 client_ip,
                 user_agent,
-                {"email": request.email},
+                {"identifier": request.identifier, "email": user.email},
                 db,
                 "CRITICAL",
             )
@@ -500,7 +500,7 @@ async def login_verify(
         session = DBSession(
             user_id=user.id,
             refresh_token=refresh_token,
-            expires_at=datetime.now(timezone.utc)
+            expires_at=datetime.now()
             + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
             ip_address=client_ip,
             user_agent=user_agent,
@@ -516,7 +516,7 @@ async def login_verify(
             str(user.id),
             client_ip,
             user_agent,
-            {"email": request.email, "sign_count": verification.new_sign_count},
+            {"identifier": request.identifier, "email": user.email, "sign_count": verification.new_sign_count},
             db,
         )
 
@@ -534,7 +534,7 @@ async def login_verify(
             None,
             client_ip,
             user_agent,
-            {"email": request.email, "error": str(e)},
+            {"identifier": request.identifier, "error": str(e)},
             db,
             "ERROR",
         )
