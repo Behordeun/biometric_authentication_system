@@ -375,13 +375,13 @@ class WebAuthnService:
                 require_user_verification=True,
             )
 
-            # Anti-replay attack: Validate sign count progression (disabled for development)
-            # if verification.new_sign_count <= stored_credential.sign_count:
-            #     logger.error(
-            #         f"Sign count regression detected for user {user.email}: "
-            #         f"stored={stored_credential.sign_count}, new={verification.new_sign_count}"
-            #     )
-            #     raise ValueError("Potential replay attack detected")
+            # Anti-replay attack: Validate sign count progression
+            if verification.new_sign_count <= stored_credential.sign_count:
+                logger.error(
+                    f"Sign count regression detected for user {user.email}: "
+                    f"stored={stored_credential.sign_count}, new={verification.new_sign_count}"
+                )
+                raise RuntimeError("Potential replay attack detected")
 
             # Validate authenticator data
             auth_data = WebAuthnService._get_authenticator_data_from_verification(
