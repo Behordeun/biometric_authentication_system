@@ -282,7 +282,7 @@ jobs:
       - name: Start services
         run: |
           cd docker
-          docker-compose up -d
+          docker compose up -d
           echo "Waiting for services to be ready..."
           for i in {1..60}; do
             if curl -f http://localhost:8000/health 2>/dev/null; then
@@ -291,7 +291,7 @@ jobs:
             fi
             if [ $i -eq 60 ]; then
               echo "❌ Services failed to start within 60 seconds"
-              docker-compose logs
+              docker compose logs
               exit 1
             fi
             sleep 1
@@ -337,7 +337,7 @@ jobs:
         if: always()
         run: |
           cd docker
-          docker-compose down -v
+          docker compose down -v
 
   quality-gate:
     name: Quality Gate
