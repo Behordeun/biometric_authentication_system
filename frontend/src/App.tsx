@@ -4,16 +4,19 @@ import axios from 'axios';
 import { API_URL } from './config';
 
 function App() {
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [loginIdentifier, setLoginIdentifier] = useState('');
-  const [username, setUsername] = useState('');
   const [message, setMessage] = useState('');
   const [token, setToken] = useState('');
 
   const handleRegister = async () => {
     try {
-      if (!registerEmail || !username) {
-        setMessage('Please enter email and username');
+      if (!firstName || !lastName || !username || !registerEmail) {
+        setMessage('Please enter first name, last name, username, and email');
         return;
       }
 
@@ -26,8 +29,11 @@ function App() {
       let optionsRes;
       try {
         optionsRes = await axios.post(`${API_URL}/auth/register/options`, {
-          email: registerEmail,
-          username
+          first_name: firstName,
+          middle_name: middleName || undefined,
+          last_name: lastName,
+          username,
+          email: registerEmail
         });
       } catch (error: any) {
         setMessage(`Failed to get registration options: ${error.response?.data?.detail || error.message}`);
@@ -45,12 +51,25 @@ function App() {
       let verifyRes;
       try {
         verifyRes = await axios.post(`${API_URL}/auth/register/verify`, {
-          email: registerEmail,
+          first_name: firstName,
+          middle_name: middleName || undefined,
+          last_name: lastName,
           username,
+          email: registerEmail,
           credential
         });
       } catch (error: any) {
-        setMessage(`Failed to verify registration: ${error.response?.data?.detail || error.message}`);
+        let errorMsg = 'Unknown error';
+        if (error.response?.data?.detail) {
+          if (Array.isArray(error.response.data.detail)) {
+            errorMsg = error.response.data.detail.map((e: any) => `${e.loc?.join('.')}: ${e.msg}`).join(', ');
+          } else {
+            errorMsg = error.response.data.detail;
+          }
+        } else if (error.message) {
+          errorMsg = error.message;
+        }
+        setMessage(`Failed to verify registration: ${errorMsg}`);
         return;
       }
 
@@ -119,10 +138,24 @@ function App() {
         <div style={{ marginBottom: '20px' }}>
           <h2>Register</h2>
           <input
-            type="email"
-            placeholder="Email"
-            value={registerEmail}
-            onChange={(e) => setRegisterEmail(e.target.value)}
+            type="text"
+            placeholder="First Name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
+          />
+          <input
+            type="text"
+            placeholder="Middle Name (Optional)"
+            value={middleName}
+            onChange={(e) => setMiddleName(e.target.value)}
+            style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
+          />
+          <input
+            type="text"
+            placeholder="Last Name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
             style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
           />
           <input
@@ -130,6 +163,13 @@ function App() {
             placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={registerEmail}
+            onChange={(e) => setRegisterEmail(e.target.value)}
             style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
           />
           <button onClick={handleRegister} style={{ padding: '10px 20px' }}>

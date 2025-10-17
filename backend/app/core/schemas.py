@@ -22,12 +22,18 @@ class UserResponse(BaseModel):
 
 
 class RegistrationOptionsRequest(BaseModel):
-    email: EmailStr
+    first_name: str
+    middle_name: Optional[str] = None
+    last_name: str
     username: str
-    display_name: Optional[str] = None
+    email: EmailStr
 
 
 class RegistrationVerification(BaseModel):
+    first_name: str
+    middle_name: Optional[str] = None
+    last_name: str
+    username: str
     email: EmailStr
     credential: dict
 
