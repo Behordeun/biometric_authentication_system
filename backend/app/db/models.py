@@ -1,11 +1,10 @@
 import uuid
 from datetime import datetime
 
+from app.db.database import Base
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.db.database import Base
 
 USERS_ID_FK = "users.id"
 
@@ -43,9 +42,12 @@ class User(Base):
     def find_by_identifier(cls, db, identifier: str):
         """Find user by email or username"""
         from sqlalchemy import or_
-        return db.query(cls).filter(
-            or_(cls.email == identifier, cls.username == identifier)
-        ).first()
+
+        return (
+            db.query(cls)
+            .filter(or_(cls.email == identifier, cls.username == identifier))
+            .first()
+        )
 
 
 class WebAuthnCredential(Base):

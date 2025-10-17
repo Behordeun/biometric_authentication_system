@@ -1,10 +1,9 @@
 import time
 
+from app.core.logging import get_logger
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
-
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 

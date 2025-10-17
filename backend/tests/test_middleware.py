@@ -1,18 +1,18 @@
 """
 Comprehensive tests for security middleware.
 """
+
 import time
 from unittest.mock import patch
 
 import pytest
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-
 from app.middleware.security_middleware import (
     AntiReplayMiddleware,
     BiometricSecurityMiddleware,
     SecurityMiddleware,
 )
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture

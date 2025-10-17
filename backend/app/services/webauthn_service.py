@@ -5,6 +5,9 @@ import secrets
 from datetime import datetime, timedelta
 from typing import Any, Dict
 
+from app.core.config import settings
+from app.core.logging import get_logger
+from app.db.models import User, WebAuthnCredential
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from webauthn import (
@@ -24,10 +27,6 @@ from webauthn.helpers.structs import (
     ResidentKeyRequirement,
     UserVerificationRequirement,
 )
-
-from app.core.config import settings
-from app.core.logging import get_logger
-from app.db.models import User, WebAuthnCredential
 
 logger = get_logger(__name__)
 
@@ -60,16 +59,16 @@ class WebAuthnService:
     def _get_authenticator_data_from_verification(verification) -> bytes:
         """Extract authenticator data from verification object (handles different WebAuthn versions)"""
         # Try different attribute names based on WebAuthn library version
-        if hasattr(verification, 'authenticator_data'):
+        if hasattr(verification, "authenticator_data"):
             return verification.authenticator_data
-        elif hasattr(verification, 'credential_authenticator_data'):
+        elif hasattr(verification, "credential_authenticator_data"):
             return verification.credential_authenticator_data
-        elif hasattr(verification, 'raw_authenticator_data'):
+        elif hasattr(verification, "raw_authenticator_data"):
             return verification.raw_authenticator_data
         else:
             # For development, return empty bytes to skip validation
             logger.warning("Could not find authenticator data in verification object")
-            return b''
+            return b""
 
     @staticmethod
     async def _check_rate_limiting(user_id: str, db: AsyncSession) -> bool:
@@ -142,9 +141,15 @@ class WebAuthnService:
             )
 
             # Additional security validations
-            auth_data = WebAuthnService._get_authenticator_data_from_verification(verification)
-            if auth_data and not WebAuthnService._validate_authenticator_data(auth_data):
-                logger.warning("Authenticator data validation failed - proceeding in development mode")
+            auth_data = WebAuthnService._get_authenticator_data_from_verification(
+                verification
+            )
+            if auth_data and not WebAuthnService._validate_authenticator_data(
+                auth_data
+            ):
+                logger.warning(
+                    "Authenticator data validation failed - proceeding in development mode"
+                )
                 # In development, log warning but don't fail
                 # In production, this should raise an exception
 
@@ -224,9 +229,14 @@ class WebAuthnService:
             try:
                 cred_id_bytes = base64.b64decode(credential_id_b64)
             except Exception:
-                logger.warning("Failed to decode credential_id for credential: %s", cred.credential_id)
+                logger.warning(
+                    "Failed to decode credential_id for credential: %s",
+                    cred.credential_id,
+                )
                 continue
-            transport_enums = WebAuthnService._parse_transports(getattr(cred, "transports", None))
+            transport_enums = WebAuthnService._parse_transports(
+                getattr(cred, "transports", None)
+            )
             allow_credentials.append(
                 PublicKeyCredentialDescriptor(
                     id=cred_id_bytes,
@@ -338,7 +348,7 @@ class WebAuthnService:
                 # Fix base64 padding for stored credential_id
                 stored_cred_id = cred.credential_id
                 if len(stored_cred_id) % 4:
-                    stored_cred_id += '=' * (4 - len(stored_cred_id) % 4)
+                    stored_cred_id += "=" * (4 - len(stored_cred_id) % 4)
                 stored_id_bytes = base64.b64decode(stored_cred_id)
                 if stored_id_bytes == raw_id_bytes:
                     stored_credential = cred
@@ -351,7 +361,7 @@ class WebAuthnService:
             # Fix base64 padding for public key
             public_key_b64 = stored_credential.public_key
             if len(public_key_b64) % 4:
-                public_key_b64 += '=' * (4 - len(public_key_b64) % 4)
+                public_key_b64 += "=" * (4 - len(public_key_b64) % 4)
 
             # Enhanced verification with strict requirements
             verification = verify_authentication_response(
@@ -373,9 +383,15 @@ class WebAuthnService:
             #     raise ValueError("Potential replay attack detected")
 
             # Validate authenticator data
-            auth_data = WebAuthnService._get_authenticator_data_from_verification(verification)
-            if auth_data and not WebAuthnService._validate_authenticator_data(auth_data):
-                logger.warning("Authenticator data validation failed - proceeding in development mode")
+            auth_data = WebAuthnService._get_authenticator_data_from_verification(
+                verification
+            )
+            if auth_data and not WebAuthnService._validate_authenticator_data(
+                auth_data
+            ):
+                logger.warning(
+                    "Authenticator data validation failed - proceeding in development mode"
+                )
                 # In development, log warning but don't fail
                 # In production, this should raise an exception
 

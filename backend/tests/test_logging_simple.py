@@ -1,6 +1,7 @@
 """
 Simple tests for logging functionality.
 """
+
 import tempfile
 from pathlib import Path
 

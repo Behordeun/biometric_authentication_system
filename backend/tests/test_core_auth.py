@@ -2,10 +2,6 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi import HTTPException
-from fastapi.security import HTTPAuthorizationCredentials
-from jose import jwt as jose_jwt
-
 from app.core.auth import (
     create_access_token,
     create_id_token,
@@ -14,6 +10,9 @@ from app.core.auth import (
     get_current_user,
 )
 from app.db.models import User
+from fastapi import HTTPException
+from fastapi.security import HTTPAuthorizationCredentials
+from jose import jwt as jose_jwt
 
 
 class TestCoreAuth:
@@ -31,7 +30,9 @@ class TestCoreAuth:
             assert isinstance(token, str)
 
             # Decode and verify token structure
-            decoded = jose_jwt.decode(token, "test_secret", algorithms=["HS256"])  # pragma: allowlist secret
+            decoded = jose_jwt.decode(
+                token, "test_secret", algorithms=["HS256"]
+            )  # pragma: allowlist secret
             assert decoded["sub"] == "user123"
             assert decoded["type"] == "access"
             assert "exp" in decoded
@@ -50,7 +51,9 @@ class TestCoreAuth:
             assert isinstance(token, str)
 
             # Decode and verify token structure
-            decoded = jose_jwt.decode(token, "test_secret", algorithms=["HS256"])  # pragma: allowlist secret
+            decoded = jose_jwt.decode(
+                token, "test_secret", algorithms=["HS256"]
+            )  # pragma: allowlist secret
             assert decoded["sub"] == "user123"
             assert decoded["type"] == "refresh"
             assert "exp" in decoded
@@ -71,7 +74,9 @@ class TestCoreAuth:
             token = create_id_token(user)
             assert isinstance(token, str)
 
-            decoded = jose_jwt.decode(token, "test_secret", algorithms=["HS256"])  # pragma: allowlist secret
+            decoded = jose_jwt.decode(
+                token, "test_secret", algorithms=["HS256"]
+            )  # pragma: allowlist secret
             assert decoded["sub"] == "user123"
             assert decoded["email"] == "test@example.com"
             assert decoded["preferred_username"] == "testuser"
@@ -129,7 +134,7 @@ class TestCoreAuth:
         with patch("app.core.auth.jwt.decode") as mock_decode:
             mock_decode.return_value = {
                 "type": "access",
-                "exp": (datetime.now(timezone.utc) + timedelta(minutes=30)).timestamp()
+                "exp": (datetime.now(timezone.utc) + timedelta(minutes=30)).timestamp(),
                 # Missing "sub"
             }
 

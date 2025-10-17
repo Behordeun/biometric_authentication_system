@@ -1,11 +1,7 @@
 import base64
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 import redis.asyncio as redis
-from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.auth import create_access_token, create_refresh_token
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -21,6 +17,9 @@ from app.db.models import Session as DBSession
 from app.db.models import User
 from app.services.security_service import BiometricSecurityValidator, SecurityService
 from app.services.webauthn_service import WebAuthnService
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = get_logger(__name__)
 
@@ -72,7 +71,9 @@ async def registration_options(
     try:
         display_name = f"{request.first_name} {request.last_name}"
         if request.middle_name:
-            display_name = f"{request.first_name} {request.middle_name} {request.last_name}"
+            display_name = (
+                f"{request.first_name} {request.middle_name} {request.last_name}"
+            )
 
         options = await WebAuthnService.generate_registration_options(
             request.email, request.username, display_name
@@ -191,7 +192,9 @@ async def registration_verify(
         # Create user
         display_name = f"{request.first_name} {request.last_name}"
         if request.middle_name:
-            display_name = f"{request.first_name} {request.middle_name} {request.last_name}"
+            display_name = (
+                f"{request.first_name} {request.middle_name} {request.last_name}"
+            )
 
         user = User(
             first_name=request.first_name,
@@ -295,6 +298,7 @@ async def login_options(
 
     # Find user by email or username
     from sqlalchemy import or_
+
     result = await db.execute(
         select(User).where(
             or_(User.email == request.identifier, User.username == request.identifier)
@@ -370,7 +374,11 @@ async def login_options(
             str(user.id),
             client_ip,
             user_agent,
-            {"identifier": request.identifier, "email": user.email, "suspicious_count": len(suspicious_activities)},
+            {
+                "identifier": request.identifier,
+                "email": user.email,
+                "suspicious_count": len(suspicious_activities),
+            },
             db,
         )
 
@@ -388,8 +396,11 @@ async def login_options(
         )
         logger.error(f"Authentication options generation failed: {e}")
         import traceback
+
         logger.error(f"Full traceback: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=f"Authentication unavailable: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Authentication unavailable: {str(e)}"
+        )
 
 
 @router.post("/login/verify", response_model=TokenResponse)
@@ -403,6 +414,7 @@ async def login_verify(
 
     # Find user first to get email for challenge lookup
     from sqlalchemy import or_
+
     result = await db.execute(
         select(User).where(
             or_(User.email == request.identifier, User.username == request.identifier)
@@ -528,7 +540,11 @@ async def login_verify(
             str(user.id),
             client_ip,
             user_agent,
-            {"identifier": request.identifier, "email": user.email, "sign_count": verification.new_sign_count},
+            {
+                "identifier": request.identifier,
+                "email": user.email,
+                "sign_count": verification.new_sign_count,
+            },
             db,
         )
 
@@ -552,5 +568,6 @@ async def login_verify(
         )
         logger.error(f"Authentication verification failed: {e}")
         import traceback
+
         logger.error(f"Full traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")

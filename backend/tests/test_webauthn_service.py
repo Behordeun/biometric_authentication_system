@@ -2,7 +2,6 @@ import base64
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from app.db.models import User
 from app.services.webauthn_service import WebAuthnService
 
