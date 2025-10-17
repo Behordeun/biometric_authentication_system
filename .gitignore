@@ -96,3 +96,5 @@ diagrams/*.md
 
 htmlcov
 .coverage
+coverage.xml
+*.cover

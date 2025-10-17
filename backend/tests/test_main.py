@@ -279,13 +279,10 @@ class TestMainApplication:
     def test_method_not_allowed(self, client):
         """Test method not allowed responses."""
         # Try POST on GET-only endpoint
-        # SecurityMiddleware validates content type first, so we get 400 instead of 405
         response = client.post("/docs")
 
-        # SecurityMiddleware intercepts and validates content type before FastAPI can return 405
-        assert (
-            response.status_code == 400
-        )  # Invalid content type from SecurityMiddleware
+        # Should return 405 Method Not Allowed
+        assert response.status_code == 405
 
     def test_application_state_consistency(self, client):
         """Test application state consistency across requests."""
