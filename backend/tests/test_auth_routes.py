@@ -124,7 +124,7 @@ class TestRegistrationOptions:
             "email": "test@example.com",
             "username": "testuser",
             "first_name": "Test",
-            "last_name": "User"
+            "last_name": "User",
         }
 
         test_client = create_test_client_with_db_override(mock_db)
@@ -147,7 +147,7 @@ class TestRegistrationOptions:
             "email": "test@example.com",
             "username": "testuser",
             "first_name": "Test",
-            "last_name": "User"
+            "last_name": "User",
         }
 
         test_client = create_test_client_with_db_override(mock_db)
@@ -175,7 +175,7 @@ class TestRegistrationOptions:
             "email": "test@example.com",
             "username": "testuser",
             "first_name": "Test",
-            "last_name": "User"
+            "last_name": "User",
         }
 
         test_client = create_test_client_with_db_override(mock_db)
@@ -206,7 +206,7 @@ class TestRegistrationOptions:
             "email": "test@example.com",
             "username": "testuser",
             "first_name": "Test",
-            "last_name": "User"
+            "last_name": "User",
         }
 
         test_client = create_test_client_with_db_override(mock_db)

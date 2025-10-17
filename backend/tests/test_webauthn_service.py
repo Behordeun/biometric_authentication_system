@@ -154,12 +154,15 @@ class TestWebAuthnService:
         }
         challenge = b"test_challenge"
 
-        with patch(
-            "app.services.webauthn_service.WebAuthnService._check_rate_limiting",
-            return_value=False,
-        ), patch(
-            "app.services.webauthn_service.WebAuthnService._validate_authenticator_data",
-            return_value=True,
+        with (
+            patch(
+                "app.services.webauthn_service.WebAuthnService._check_rate_limiting",
+                return_value=False,
+            ),
+            patch(
+                "app.services.webauthn_service.WebAuthnService._validate_authenticator_data",
+                return_value=True,
+            ),
         ):
             result = await WebAuthnService.verify_authentication(
                 credential, challenge, user, mock_db
@@ -195,12 +198,15 @@ class TestWebAuthnService:
             mock_verification.authenticator_data = b"x" * 40
             mock_verify.return_value = mock_verification
 
-            with patch(
-                "app.services.webauthn_service.WebAuthnService._check_rate_limiting",
-                return_value=False,
-            ), patch(
-                "app.services.webauthn_service.WebAuthnService._validate_authenticator_data",
-                return_value=True,
+            with (
+                patch(
+                    "app.services.webauthn_service.WebAuthnService._check_rate_limiting",
+                    return_value=False,
+                ),
+                patch(
+                    "app.services.webauthn_service.WebAuthnService._validate_authenticator_data",
+                    return_value=True,
+                ),
             ):
                 with pytest.raises(
                     RuntimeError, match="Potential replay attack detected"

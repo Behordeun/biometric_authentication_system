@@ -3,9 +3,8 @@ Tests for database models.
 """
 
 from datetime import datetime
-import pytest
 
-from app.db.models import User, WebAuthnCredential, Session, AuditLog
+from app.db.models import AuditLog, Session, User, WebAuthnCredential
 
 
 class TestModels:
@@ -20,7 +19,7 @@ class TestModels:
             email="test@example.com",
             display_name="Test User",
             is_active=True,
-            is_verified=True
+            is_verified=True,
         )
 
         assert user.first_name == "Test"
@@ -38,7 +37,7 @@ class TestModels:
             middle_name="Middle",
             last_name="User",
             username="testuser",
-            email="test@example.com"
+            email="test@example.com",
         )
 
         assert user.middle_name == "Middle"
@@ -51,7 +50,7 @@ class TestModels:
             public_key="pubkey123",
             sign_count=0,
             transports=["usb", "nfc"],
-            device_name="Test Device"
+            device_name="Test Device",
         )
 
         assert credential.user_id == "user123"
@@ -68,7 +67,7 @@ class TestModels:
             refresh_token="token123",
             expires_at=datetime.now(),
             ip_address="127.0.0.1",
-            user_agent="Test Agent"
+            user_agent="Test Agent",
         )
 
         assert session.user_id == "user123"
@@ -86,7 +85,7 @@ class TestModels:
             resource="test",
             action="test_action",
             status="SUCCESS",
-            details={"test": "data"}
+            details={"test": "data"},
         )
 
         assert audit_log.event_type == "TEST_EVENT"
@@ -104,7 +103,7 @@ class TestModels:
             event_type="MINIMAL_EVENT",
             resource="test",
             action="test_action",
-            status="SUCCESS"
+            status="SUCCESS",
         )
 
         assert audit_log.event_type == "MINIMAL_EVENT"

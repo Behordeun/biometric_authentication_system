@@ -107,7 +107,12 @@ async def registration_options(
 
     except Exception as e:
         logger.error(f"Registration options generation failed: {e}")
-        raise HTTPException(status_code=500, detail="Registration unavailable")
+        import traceback
+
+        logger.error(f"Full traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500, detail=f"Registration unavailable: {str(e)}"
+        )
 
 
 @router.post("/register/verify", response_model=TokenResponse)
