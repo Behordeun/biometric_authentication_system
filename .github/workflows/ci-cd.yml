@@ -307,7 +307,7 @@ jobs:
           echo "Testing registration options..."
           response=$(curl -s -w "%{http_code}" -o result.json -X POST http://localhost:8000/auth/register/options \
             -H "Content-Type: application/json" \
-            -d '{"email":"test@example.com","username":"testuser"}')
+            -d '{"email":"test@example.com","username":"testuser","first_name":"Test","last_name":"User"}'
           if [ "$response" -ne 200 ]; then
             echo "❌ Registration options failed with HTTP status $response"
             cat result.json
