@@ -303,6 +303,10 @@ jobs:
           echo "Testing health endpoint..."
           curl -f http://localhost:8000/health || exit 1
 
+          # Check docker logs for any errors
+          echo "Checking backend logs..."
+          cd docker && docker compose logs backend
+
           # Test registration options
           echo "Testing registration options..."
           response=$(curl -s -w "%{http_code}" -o result.json -X POST http://localhost:8000/auth/register/options \
@@ -311,6 +315,8 @@ jobs:
           if [ "$response" -ne 200 ]; then
             echo "❌ Registration options failed with HTTP status $response"
             cat result.json
+            echo "Backend logs after error:"
+            docker compose logs backend --tail=20
             exit 1
           fi
 
