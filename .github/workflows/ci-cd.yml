@@ -190,9 +190,11 @@ jobs:
           npm install
 
       - name: Run tests with coverage
+        env:
+          CI: true
         run: |
           cd frontend
-          npm run test:coverage -- --watchAll=false || echo "Tests completed with warnings"
+          npm run test:coverage
 
       - name: Check coverage thresholds
         run: |
