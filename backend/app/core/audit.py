@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.logging import get_logger
 from app.db.models import AuditLog
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = get_logger(__name__)
 

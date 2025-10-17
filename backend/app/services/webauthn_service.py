@@ -5,9 +5,6 @@ import secrets
 from datetime import datetime, timedelta
 from typing import Any, Dict
 
-from app.core.config import settings
-from app.core.logging import get_logger
-from app.db.models import User, WebAuthnCredential
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from webauthn import (
@@ -27,6 +24,10 @@ from webauthn.helpers.structs import (
     ResidentKeyRequirement,
     UserVerificationRequirement,
 )
+
+from app.core.config import settings
+from app.core.logging import get_logger
+from app.db.models import User, WebAuthnCredential
 
 logger = get_logger(__name__)
 

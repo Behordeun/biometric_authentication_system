@@ -5,15 +5,17 @@ Test for enhanced login functionality with email or username.
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi.testclient import TestClient
+
 from app.api.routes.auth import router
 from app.db.models import User
-from fastapi.testclient import TestClient
 
 
 def create_test_client_with_db_override(mock_db):
     """Helper function to create test client with database override."""
-    from app.db.database import get_db
     from fastapi import FastAPI
+
+    from app.db.database import get_db
 
     def override_get_db():
         return mock_db

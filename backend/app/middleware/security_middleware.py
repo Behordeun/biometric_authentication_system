@@ -5,11 +5,12 @@ Security Middleware for Enhanced Protection
 import time
 from typing import Callable
 
-from app.core.logging import get_logger
-from app.services.security_service import SecurityService
 from fastapi import HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from app.core.logging import get_logger
+from app.services.security_service import SecurityService
 
 logger = get_logger(__name__)
 

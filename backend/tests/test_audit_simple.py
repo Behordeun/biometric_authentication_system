@@ -5,6 +5,7 @@ Simple tests for audit functionality.
 from unittest.mock import AsyncMock
 
 import pytest
+
 from app.core.audit import AuditLogger, log_login_attempt, log_registration
 
 

@@ -1,14 +1,15 @@
 import secrets
 from datetime import datetime, timedelta, timezone
 
-from app.core.config import settings
-from app.db.database import get_db
-from app.db.models import User
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
+from app.db.database import get_db
+from app.db.models import User
 
 security = HTTPBearer()
 

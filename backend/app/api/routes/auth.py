@@ -2,6 +2,10 @@ import base64
 from datetime import datetime, timedelta
 
 import redis.asyncio as redis
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.auth import create_access_token, create_refresh_token
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -17,9 +21,6 @@ from app.db.models import Session as DBSession
 from app.db.models import User
 from app.services.security_service import BiometricSecurityValidator, SecurityService
 from app.services.webauthn_service import WebAuthnService
-from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = get_logger(__name__)
 

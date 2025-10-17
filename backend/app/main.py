@@ -1,5 +1,10 @@
 from contextlib import asynccontextmanager
 
+from fastapi import Depends, FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
+
 from app.api.routes import auth, oidc
 from app.core import auth as auth_core
 from app.core.config import settings
@@ -11,10 +16,6 @@ from app.middleware.security_middleware import (
     BiometricSecurityMiddleware,
     SecurityMiddleware,
 )
-from fastapi import Depends, FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from sqlalchemy import text
 
 logger = get_logger(__name__)
 

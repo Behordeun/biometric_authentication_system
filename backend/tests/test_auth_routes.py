@@ -7,10 +7,11 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from app.api.routes.auth import router
-from app.db.models import User
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.routes.auth import router
+from app.db.models import User
 
 
 @pytest.fixture
@@ -26,8 +27,9 @@ def client():
 
 def create_test_client_with_db_override(mock_db):
     """Helper function to create test client with database override."""
-    from app.db.database import get_db
     from fastapi import FastAPI
+
+    from app.db.database import get_db
 
     def override_get_db():
         return mock_db
@@ -124,8 +126,9 @@ class TestRegistrationOptions:
         def override_get_db():
             return mock_db
 
-        from app.db.database import get_db
         from fastapi import FastAPI
+
+        from app.db.database import get_db
 
         # Create a new test app and override the dependency
         test_app = FastAPI()
