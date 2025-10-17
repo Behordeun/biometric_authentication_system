@@ -313,17 +313,14 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"email":"test@example.com","username":"testuser","first_name":"Test","last_name":"User"}')
 
-          # Accept either success (if WebAuthn works) or specific error (if no hardware)
-          if [ "$response" -eq 200 ]; then
-            echo "✅ Registration options generated successfully"
-          elif [ "$response" -eq 500 ]; then
-            echo "ℹ️ Registration options failed as expected (no biometric hardware in CI)"
+          if [ "$response" -ne 200 ]; then
+            echo "❌ Registration options failed with HTTP status $response"
             cat result.json
-          else
-            echo "❌ Unexpected response code: $response"
-            cat result.json
+            echo "Backend logs after error:"
+            docker compose logs backend --tail=20
             exit 1
           fi
+          echo "✅ Registration options generated successfully"
 
           # Test login options endpoint (should fail gracefully for non-existent user)
           echo "Testing login options endpoint..."
@@ -331,14 +328,14 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"identifier":"nonexistent@example.com"}')
 
-          # Should return 404 for non-existent user
-          if [ "$response" -eq 404 ]; then
-            echo "✅ Login options correctly returned 404 for non-existent user"
-          else
-            echo "❌ Unexpected response code: $response"
+          if [ "$response" -ne 404 ]; then
+            echo "❌ Login options failed with HTTP status $response (expected 404)"
             cat result.json
+            echo "Backend logs after error:"
+            docker compose logs backend --tail=20
             exit 1
           fi
+          echo "✅ Login options correctly returned 404 for non-existent user"
 
           # Test OpenID configuration
           echo "Testing OpenID configuration..."
