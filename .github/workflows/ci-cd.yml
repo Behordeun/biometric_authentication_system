@@ -167,8 +167,9 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           file: ./backend/coverage.xml
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           flags: backend
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   test-frontend:
     name: Frontend Tests
@@ -216,8 +217,9 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           file: ./frontend/coverage/lcov.info
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           flags: frontend
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   docker-build:
     name: Docker Build Test
