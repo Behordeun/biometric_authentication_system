@@ -53,6 +53,7 @@ dependencies = [
     "pytest-asyncio>=1.2.0",
     "setuptools>=80.9.0",
     "greenlet>=3.2.4",
+    "mypy>=1.18.2",
 ]
 
 [project.optional-dependencies]

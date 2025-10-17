@@ -57,7 +57,7 @@ class WebAuthnService:
         return user_present and user_verified
 
     @staticmethod
-    def _get_authenticator_data_from_verification(verification) -> bytes:
+    def _get_authenticator_data_from_verification(verification: Any) -> bytes:
         """Extract authenticator data from verification object (handles different WebAuthn versions)"""
         # Try different attribute names based on WebAuthn library version
         if hasattr(verification, "authenticator_data"):
@@ -80,7 +80,7 @@ class WebAuthnService:
 
     @staticmethod
     async def generate_registration_options(
-        user_email: str, username: str, display_name: str = None
+        user_email: str, username: str, display_name: str | None = None
     ) -> Dict[str, Any]:
         """Generate secure registration options with anti-spoofing measures"""
         logger.info(f"Generating registration options for user: {username}")
@@ -127,7 +127,7 @@ class WebAuthnService:
     @staticmethod
     async def verify_registration(
         credential: dict, expected_challenge: bytes, user: User, db: AsyncSession
-    ):
+    ) -> Any:
         """Verify registration with enhanced security checks"""
         try:
             logger.info(f"Verifying registration for user: {user.email}")
@@ -193,7 +193,8 @@ class WebAuthnService:
         except Exception as exc:
             await db.rollback()
             logger.error(
-                f"Registration verification failed for user {user.email}: {exc}"
+                f"Registration verification failed for user {user.email}: {exc}",
+                exc_info=True,
             )
             raise RuntimeError(f"WebAuthn registration verification failed: {exc}")
 
@@ -205,7 +206,7 @@ class WebAuthnService:
         return s + "=" * ((4 - len(s) % 4) % 4)
 
     @staticmethod
-    def _parse_transports(transports) -> list:
+    def _parse_transports(transports: Any) -> list:
         mapping = {
             "internal": AuthenticatorTransport.INTERNAL,
             "usb": AuthenticatorTransport.USB,
@@ -223,7 +224,7 @@ class WebAuthnService:
         return result
 
     @staticmethod
-    def _build_allow_credentials(credentials: list) -> list:
+    def _build_allow_credentials(credentials) -> list:
         allow_credentials = []
         for cred in credentials:
             credential_id_b64 = WebAuthnService._fix_base64_padding(cred.credential_id)
@@ -298,14 +299,15 @@ class WebAuthnService:
 
         except Exception as exc:
             logger.error(
-                f"Failed to generate authentication options for user {user.email}: {exc}"
+                f"Failed to generate authentication options for user {user.email}: {exc}",
+                exc_info=True,
             )
             raise RuntimeError(f"Failed to generate authentication options: {exc}")
 
     @staticmethod
     async def verify_authentication(
         credential: dict, expected_challenge: bytes, user: User, db: AsyncSession
-    ):
+    ) -> Any:
         """Verify authentication with comprehensive anti-spoofing checks"""
         try:
             logger.info(f"Verifying authentication for user: {user.email}")
@@ -410,7 +412,8 @@ class WebAuthnService:
         except Exception as exc:
             await db.rollback()
             logger.error(
-                f"Authentication verification failed for user {user.email}: {exc}"
+                f"Authentication verification failed for user {user.email}: {exc}",
+                exc_info=True,
             )
             raise RuntimeError(f"WebAuthn authentication verification failed: {exc}")
 

@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 class LoggingMiddleware(BaseHTTPMiddleware):
     """Middleware to log all HTTP requests and responses"""
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next) -> Response:
         start_time = time.time()
 
         # Extract request info and sanitize for log injection

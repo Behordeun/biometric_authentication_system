@@ -43,7 +43,7 @@ class RegistrationVerification(BaseModel):
         yield cls.validate_credential
 
     @staticmethod
-    def validate_credential(value):
+    def validate_credential(value: dict) -> dict:
         if not isinstance(value, dict):
             raise ValueError("credential must be a dictionary")
         return value
