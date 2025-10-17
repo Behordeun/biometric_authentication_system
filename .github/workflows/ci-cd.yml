@@ -263,21 +263,12 @@ jobs:
 
       - name: Create test environment
         run: |
-          # Create test .env file
-          cat > backend/.env << EOF
-          DATABASE_URL=postgresql+asyncpg://${{ secrets.TEST_DB_USER }}:${{ secrets.TEST_DB_PASSWORD }}@localhost:5432/${{ secrets.TEST_DB_NAME }}
-          REDIS_URL=${{ secrets.TEST_REDIS_URL }}
-          SECRET_KEY=${{ secrets.TEST_SECRET_KEY }}
-          RP_ID=${{ secrets.TEST_RP_ID }}
-          RP_NAME=${{ secrets.TEST_RP_NAME }}
-          ORIGIN=${{ secrets.TEST_ORIGIN }}
-          ENVIRONMENT=test
-          EOF
+          # Create .env file from ENV_FILE secret
+          echo "${{ secrets.ENV_FILE }}" > backend/.env
 
-          # Ensure .env symlink exists
-          if [ ! -L docker/.env ]; then
-            ln -sf ../backend/.env docker/.env
-          fi
+          # Create symlinks
+          ln -sf ../backend/.env config/.env
+          ln -sf ../backend/.env docker/.env
 
       - name: Start services
         run: |
