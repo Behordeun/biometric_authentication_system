@@ -11,6 +11,8 @@ jest.mock('./config', () => ({
   API_URL: 'https://localhost:8000'
 }));
 
+
+
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 const mockedStartRegistration = startRegistration as jest.MockedFunction<typeof startRegistration>;
 const mockedStartAuthentication = startAuthentication as jest.MockedFunction<typeof startAuthentication>;
@@ -27,14 +29,13 @@ describe('App Component', () => {
 
   test('renders registration form', () => {
     render(<App />);
-    expect(screen.getAllByPlaceholderText('Email')).toHaveLength(2);
+    expect(screen.getByPlaceholderText('Email')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Username')).toBeInTheDocument();
     expect(screen.getByText('Register with Biometric')).toBeInTheDocument();
   });
 
   test('renders login form', () => {
     render(<App />);
-    expect(screen.getByPlaceholderText('Email')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Email or Username')).toBeInTheDocument();
     expect(screen.getByText('Login with Biometric')).toBeInTheDocument();
   });
@@ -45,7 +46,7 @@ describe('App Component', () => {
     fireEvent.click(screen.getByText('Register with Biometric'));
 
     await waitFor(() => {
-      expect(screen.getByText('Please enter email and username')).toBeInTheDocument();
+      expect(screen.getByText('Please enter first name, last name, username, and email')).toBeInTheDocument();
     });
   });
 
@@ -72,10 +73,14 @@ describe('App Component', () => {
     render(<App />);
 
     // Fill registration form
-    const emailInputs = screen.getAllByPlaceholderText('Email');
+    const firstNameInput = screen.getByPlaceholderText('First Name');
+    const lastNameInput = screen.getByPlaceholderText('Last Name');
+    const emailInput = screen.getByPlaceholderText('Email');
     const usernameInput = screen.getByPlaceholderText('Username');
 
-    fireEvent.change(emailInputs[0], { target: { value: 'test@example.com' } });
+    fireEvent.change(firstNameInput, { target: { value: 'Test' } });
+    fireEvent.change(lastNameInput, { target: { value: 'User' } });
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(usernameInput, { target: { value: 'testuser' } });
 
     // Click register
@@ -99,8 +104,8 @@ describe('App Component', () => {
     render(<App />);
 
     // Fill login form
-    const emailInputs = screen.getAllByPlaceholderText('Email');
-    fireEvent.change(emailInputs[1], { target: { value: 'test@example.com' } });
+    const loginInput = screen.getByPlaceholderText('Email or Username');
+    fireEvent.change(loginInput, { target: { value: 'test@example.com' } });
 
     // Click login
     fireEvent.click(screen.getByText('Login with Biometric'));
@@ -118,10 +123,14 @@ describe('App Component', () => {
 
     render(<App />);
 
-    const emailInputs = screen.getAllByPlaceholderText('Email');
+    const firstNameInput = screen.getByPlaceholderText('First Name');
+    const lastNameInput = screen.getByPlaceholderText('Last Name');
+    const emailInput = screen.getByPlaceholderText('Email');
     const usernameInput = screen.getByPlaceholderText('Username');
 
-    fireEvent.change(emailInputs[0], { target: { value: 'test@example.com' } });
+    fireEvent.change(firstNameInput, { target: { value: 'Test' } });
+    fireEvent.change(lastNameInput, { target: { value: 'User' } });
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(usernameInput, { target: { value: 'testuser' } });
     fireEvent.click(screen.getByText('Register with Biometric'));
 
@@ -137,8 +146,8 @@ describe('App Component', () => {
 
     render(<App />);
 
-    const emailInputs = screen.getAllByPlaceholderText('Email');
-    fireEvent.change(emailInputs[1], { target: { value: 'test@example.com' } });
+    const loginInput = screen.getByPlaceholderText('Email or Username');
+    fireEvent.change(loginInput, { target: { value: 'test@example.com' } });
     fireEvent.click(screen.getByText('Login with Biometric'));
 
     await waitFor(() => {
@@ -153,10 +162,14 @@ describe('App Component', () => {
 
     render(<App />);
 
-    const emailInputs = screen.getAllByPlaceholderText('Email');
+    const firstNameInput = screen.getByPlaceholderText('First Name');
+    const lastNameInput = screen.getByPlaceholderText('Last Name');
+    const emailInput = screen.getByPlaceholderText('Email');
     const usernameInput = screen.getByPlaceholderText('Username');
 
-    fireEvent.change(emailInputs[0], { target: { value: 'test@example.com' } });
+    fireEvent.change(firstNameInput, { target: { value: 'Test' } });
+    fireEvent.change(lastNameInput, { target: { value: 'User' } });
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(usernameInput, { target: { value: 'testuser' } });
     fireEvent.click(screen.getByText('Register with Biometric'));
 
@@ -181,8 +194,8 @@ describe('App Component', () => {
     render(<App />);
 
     // Login first
-    const emailInputs = screen.getAllByPlaceholderText('Email');
-    fireEvent.change(emailInputs[1], { target: { value: 'test@example.com' } });
+    const loginInput = screen.getByPlaceholderText('Email or Username');
+    fireEvent.change(loginInput, { target: { value: 'test@example.com' } });
     fireEvent.click(screen.getByText('Login with Biometric'));
 
     await waitFor(() => {
@@ -214,8 +227,8 @@ describe('App Component', () => {
     render(<App />);
 
     // Login first
-    const emailInputs = screen.getAllByPlaceholderText('Email');
-    fireEvent.change(emailInputs[1], { target: { value: 'test@example.com' } });
+    const loginInput = screen.getByPlaceholderText('Email or Username');
+    fireEvent.change(loginInput, { target: { value: 'test@example.com' } });
     fireEvent.click(screen.getByText('Login with Biometric'));
 
     await waitFor(() => {
@@ -243,10 +256,14 @@ describe('App Component', () => {
 
     render(<App />);
 
-    const emailInputs = screen.getAllByPlaceholderText('Email');
+    const firstNameInput = screen.getByPlaceholderText('First Name');
+    const lastNameInput = screen.getByPlaceholderText('Last Name');
+    const emailInput = screen.getByPlaceholderText('Email');
     const usernameInput = screen.getByPlaceholderText('Username');
 
-    fireEvent.change(emailInputs[0], { target: { value: 'test@example.com' } });
+    fireEvent.change(firstNameInput, { target: { value: 'Test' } });
+    fireEvent.change(lastNameInput, { target: { value: 'User' } });
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(usernameInput, { target: { value: 'testuser' } });
     fireEvent.click(screen.getByText('Register with Biometric'));
 
@@ -262,12 +279,102 @@ describe('App Component', () => {
 
     render(<App />);
 
-    const emailInputs = screen.getAllByPlaceholderText('Email');
-    fireEvent.change(emailInputs[1], { target: { value: 'test@example.com' } });
+    const loginInput = screen.getByPlaceholderText('Email or Username');
+    fireEvent.change(loginInput, { target: { value: 'test@example.com' } });
     fireEvent.click(screen.getByText('Login with Biometric'));
 
     await waitFor(() => {
       expect(screen.getByText(/Login failed: Biometric failed/)).toBeInTheDocument();
+    });
+  });
+
+  test('handles registration with middle name', async () => {
+    const mockOptionsResponse = { data: { challenge: 'test-challenge' } };
+    const mockCredential = { id: 'test-credential' };
+    const mockVerifyResponse = { data: { success: true } };
+
+    mockedAxios.post
+      .mockResolvedValueOnce(mockOptionsResponse)
+      .mockResolvedValueOnce(mockVerifyResponse);
+    mockedStartRegistration.mockResolvedValue(mockCredential as any);
+
+    render(<App />);
+
+    // Fill registration form with middle name
+    const firstNameInput = screen.getByPlaceholderText('First Name');
+    const middleNameInput = screen.getByPlaceholderText('Middle Name (Optional)');
+    const lastNameInput = screen.getByPlaceholderText('Last Name');
+    const emailInput = screen.getByPlaceholderText('Email');
+    const usernameInput = screen.getByPlaceholderText('Username');
+
+    fireEvent.change(firstNameInput, { target: { value: 'Test' } });
+    fireEvent.change(middleNameInput, { target: { value: 'Middle' } });
+    fireEvent.change(lastNameInput, { target: { value: 'User' } });
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.change(usernameInput, { target: { value: 'testuser' } });
+
+    // Click register
+    fireEvent.click(screen.getByText('Register with Biometric'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Registration successful! You can now log in.')).toBeInTheDocument();
+    });
+  });
+
+  test('handles generic registration error without response data', async () => {
+    mockedAxios.post.mockRejectedValue(new Error('Network error'));
+
+    render(<App />);
+
+    const firstNameInput = screen.getByPlaceholderText('First Name');
+    const lastNameInput = screen.getByPlaceholderText('Last Name');
+    const emailInput = screen.getByPlaceholderText('Email');
+    const usernameInput = screen.getByPlaceholderText('Username');
+
+    fireEvent.change(firstNameInput, { target: { value: 'Test' } });
+    fireEvent.change(lastNameInput, { target: { value: 'User' } });
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.change(usernameInput, { target: { value: 'testuser' } });
+    fireEvent.click(screen.getByText('Register with Biometric'));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Failed to get registration options: Network error/)).toBeInTheDocument();
+    });
+  });
+
+  test('handles array error details in registration verification', async () => {
+    const mockOptionsResponse = { data: { challenge: 'test-challenge' } };
+    const mockCredential = { id: 'test-credential' };
+
+    mockedAxios.post
+      .mockResolvedValueOnce(mockOptionsResponse)
+      .mockRejectedValueOnce({
+        response: {
+          data: {
+            detail: [
+              { loc: ['field1'], msg: 'Error 1' },
+              { loc: ['field2'], msg: 'Error 2' }
+            ]
+          }
+        }
+      });
+    mockedStartRegistration.mockResolvedValue(mockCredential as any);
+
+    render(<App />);
+
+    const firstNameInput = screen.getByPlaceholderText('First Name');
+    const lastNameInput = screen.getByPlaceholderText('Last Name');
+    const emailInput = screen.getByPlaceholderText('Email');
+    const usernameInput = screen.getByPlaceholderText('Username');
+
+    fireEvent.change(firstNameInput, { target: { value: 'Test' } });
+    fireEvent.change(lastNameInput, { target: { value: 'User' } });
+    fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+    fireEvent.change(usernameInput, { target: { value: 'testuser' } });
+    fireEvent.click(screen.getByText('Register with Biometric'));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Failed to verify registration: field1: Error 1, field2: Error 2/)).toBeInTheDocument();
     });
   });
 });
