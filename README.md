@@ -6,6 +6,7 @@
 [![Coverage](https://img.shields.io/badge/Backend%20Coverage-90%25-brightgreen)](https://github.com/your-username/biometric_authentication_system/actions)
 [![Frontend Coverage](https://img.shields.io/badge/Frontend%20Coverage-84%25-brightgreen)](https://github.com/your-username/biometric_authentication_system/actions)
 [![Tests](https://img.shields.io/badge/Tests-150%20Passing-brightgreen)](https://github.com/your-username/biometric_authentication_system/actions)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FBehordeun%2Fbiometric_authentication_system.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FBehordeun%2Fbiometric_authentication_system?ref=badge_shield)
 
 A modern, enterprise-grade authentication system combining OAuth2, OpenID Connect, and WebAuthn (FIDO2) for passwordless biometric authentication.
 
@@ -287,3 +288,6 @@ See [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md), [SECURITY.md](docs/SECURITY
 ## License
 
 MIT
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FBehordeun%2Fbiometric_authentication_system.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FBehordeun%2Fbiometric_authentication_system?ref=badge_large)
