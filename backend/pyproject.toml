@@ -39,14 +39,14 @@ dependencies = [
     # Authentication & Security
     "python-jose[cryptography]==3.3.0",
     "passlib[bcrypt]==1.7.4",
-    "cryptography==42.0.0",
+    "cryptography==44.0.1",
     "webauthn==2.0.0",
     # Cache
     "redis[hiredis]>=4.0.0",
     # HTTP Client
     "httpx==0.26.0",
     # Utilities
-    "python-multipart==0.0.9",
+    "python-multipart==0.0.18",
     "python-dotenv==1.0.0",
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",

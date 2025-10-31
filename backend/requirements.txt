@@ -15,7 +15,7 @@ email-validator==2.1.1
 # Authentication & Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-cryptography==42.0.0
+cryptography==44.0.1
 webauthn==2.0.0
 
 # Cache
@@ -26,7 +26,7 @@ aioredis==2.0.1
 httpx==0.26.0
 
 # Utilities
-python-multipart==0.0.9
+python-multipart==0.0.18
 python-dotenv==1.0.0
 
 # Code Formatting & Linting
