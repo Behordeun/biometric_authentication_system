@@ -26,7 +26,7 @@ aioredis==2.0.1
 httpx==0.26.0
 
 # Utilities
-python-multipart==0.0.18
+python-multipart==0.0.22
 python-dotenv==1.0.0
 
 # Code Formatting & Linting

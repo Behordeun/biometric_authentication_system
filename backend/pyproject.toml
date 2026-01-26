@@ -46,7 +46,7 @@ dependencies = [
     # HTTP Client
     "httpx==0.26.0",
     # Utilities
-    "python-multipart==0.0.18",
+    "python-multipart==0.0.22",
     "python-dotenv==1.0.0",
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
